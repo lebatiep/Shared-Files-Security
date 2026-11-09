@@ -2,10 +2,9 @@ from pathlib import Path
 import secrets
 from threading import RLock
 
-from .crypto_ops import fingerprint
 from .envelope import encode_json, read_json
 from .errors import ErrorCode, ShareError
-from .keys import identifier, validate_bundle
+from .keys import fingerprint, identifier, validate_bundle
 from .models import TrustedContact, TrustStatus
 from .storage import LocalStorage
 
@@ -47,8 +46,12 @@ class TrustStore:
 
     def import_contact(self, profile_id, contact_id, bundle_data, *, replace=False):
         with self.lock:
-            bundle, _, _ = validate_bundle(bundle_data)
+            bundle, enc, sig = validate_bundle(bundle_data)
             path = self._path(profile_id, contact_id)
+            if path.exists():
+                _, contact = self._read(profile_id, contact_id)
+                if (contact.encryption_fingerprint, contact.signing_fingerprint) == (fingerprint(enc), fingerprint(sig)):
+                    return contact
             path.parent.mkdir(parents=True, exist_ok=True)
             obj = {'version': 1, 'bundle': bundle, 'status': TrustStatus.UNVERIFIED.value}
             self.storage.save_atomic(encode_json(obj), path, overwrite_confirmed=replace)
@@ -57,6 +60,8 @@ class TrustStore:
     def verify_contact(self, profile_id, contact_id, encryption_fingerprint, signing_fingerprint):
         with self.lock:
             obj, contact = self._read(profile_id, contact_id)
+            if contact.status is TrustStatus.DISABLED:
+                raise ShareError(ErrorCode.UNTRUSTED_RECIPIENT)
             for expected, actual in ((encryption_fingerprint, contact.encryption_fingerprint), (signing_fingerprint, contact.signing_fingerprint)):
                 if not isinstance(expected, str) or not expected.isascii() or not secrets.compare_digest(expected, actual):
                     raise ShareError(ErrorCode.UNTRUSTED_RECIPIENT)
@@ -72,6 +77,11 @@ class TrustStore:
 
     def list_contacts(self, profile_id):
         return [self._read(profile_id, path.stem)[1] for path in sorted(self._directory(profile_id).glob('*.json'))]
+
+    def find_name_conflicts(self, profile_id, contact_id):
+        contact = self._read(profile_id, contact_id)[1]
+        return tuple(other for other in self.list_contacts(profile_id)
+                     if other.contact_id != contact_id and other.display_name == contact.display_name)
 
     def resolve_recipient(self, profile_id, contact_id):
         contact = self._read(profile_id, contact_id)[1]

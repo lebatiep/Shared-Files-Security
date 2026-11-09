@@ -254,9 +254,17 @@ class App:
         if not contact:
             return
         data = self.app.storage.read_limited(Path(path), 8192)
-        self.app.trust.import_contact(profile, contact, data)
+        imported = self.app.trust.import_contact(profile, contact, data)
+        if self.app.trust.find_name_conflicts(profile, contact):
+            messagebox.showwarning(
+                'Different keys for the same name',
+                'Another contact has the same name but different keys. Keep the old pins and verify both new fingerprints independently.',
+                parent=self.root)
         self.refresh_contacts()
-        self.status.set('Đã nhập khóa, chưa tin cậy. Xác minh hai dấu vân tay trước khi sử dụng. Khi đổi khóa, dùng mã liên hệ mới để giữ khóa cũ.')
+        if imported.status is TrustStatus.UNVERIFIED:
+            self.status.set('Public keys imported. Verify both fingerprints before use. Keep old keys under their existing contact ID.')
+        else:
+            self.status.set('These keys already exist. The contact name and trust status were preserved.')
 
     def show_contact(self):
         profile, contact_id = self.selected_profile(), self.selected_contact()
