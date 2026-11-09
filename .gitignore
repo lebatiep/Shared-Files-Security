@@ -1,16 +1,16 @@
-# Tài liệu kế hoạch tham khảo, không đưa lên Git.
+# Tai lieu ke hoach cuc bo.
 /Ke_hoach_trien_khai_du_an_nhom_5_nguoi.pdf
 
-# Python: cache, môi trường ảo và kết quả kiểm thử.
-__pycache__/
-*.py[cod]
+# Python
 .venv/
 venv/
+__pycache__/
+*.py[cod]
 .pytest_cache/
 .coverage
 htmlcov/
 
-# Cấu hình riêng của máy và dữ liệu bí mật khi chạy ứng dụng.
+# Cau hinh may va du lieu chay
 .vscode/
 .idea/
 .env
@@ -19,8 +19,20 @@ htmlcov/
 runtime/
 *.pem
 *.key
+*.p12
+*.pfx
+*.sfile
+tests/generated/
+inputs/local/
 
-# File đầu ra và bằng chứng cục bộ.
+# Ket qua cuc bo
 output/
 evidence/raw/
-*.sfile
+evidence/recordings/
+.test-results/
+*.log
+build/
+dist/
+*.egg-info/
+.DS_Store
+Thumbs.db
