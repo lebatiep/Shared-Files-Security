@@ -4,6 +4,13 @@ Không tái sử dụng nonce với cùng khóa. Python không bảo đảm th�
 hằng định; mã này phục vụ học tập, không thay thế thư viện đã được kiểm toán.
 """
 
+from os import urandom
+
+
+def generate_key_nonce() -> tuple[bytes, bytes]:
+    """Tạo khóa AES mới 32 byte và nonce mới 12 byte cho mỗi lần gửi."""
+    return urandom(32), urandom(12)
+
 
 _SBOX = bytes.fromhex(
     '637c777bf26b6fc53001672bfed7ab76'

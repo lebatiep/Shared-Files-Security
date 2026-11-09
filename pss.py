@@ -9,6 +9,8 @@ from sha256 import mgf1, sha256, xor_bytes
 def sign(message: bytes, n: int, d: int) -> bytes:
     """Ký đúng chuỗi byte message bằng private key ký (n, d)."""
     check_key(n, d)
+    if not isinstance(message, bytes):
+        raise TypeError("Dữ liệu ký phải là bytes")
     salt = urandom(32)
     digest = sha256(bytes(8) + sha256(message) + salt)
     data_block = bytes(318) + b"\x01" + salt
@@ -23,6 +25,8 @@ def sign(message: bytes, n: int, d: int) -> bytes:
 def verify(message: bytes, signature: bytes, n: int, e: int = 65537) -> bool:
     """Trả False khi chữ ký sai; khóa sai profile gây ValueError."""
     check_key(n, e)
+    if not isinstance(message, bytes):
+        raise TypeError("Dữ liệu ký phải là bytes")
     if e != 65537:
         raise ValueError("Public exponent phải là 65537")
     if not isinstance(signature, bytes) or len(signature) != 384:
