@@ -11,24 +11,21 @@ import json
 import re
 from typing import NamedTuple
 
-# Giới hạn cục bộ; chuyển sang config.py chung khi Tiệp tạo.
-MAX_FILE = 10_485_760
-MAX_ENVELOPE = 15_728_640
-MAX_HEADER = 4096
-MAX_METADATA = 4096
-MAX_PAYLOAD = 4 + MAX_METADATA + MAX_FILE
-WRAPPED_LEN = 384
-SIGNATURE_LEN = 384
-NONCE_LEN = 12
-TAG_LEN = 16
-MIN_CIPHERTEXT = TAG_LEN
-MAX_CIPHERTEXT = MAX_PAYLOAD + TAG_LEN  # 10.489.876
+from dataclasses import asdict
 
-FORMAT = "SFILE"
-VERSION = 1
-SUITE = "A256GCM_RSA3072OAEP256_PSS256"
-AAD_CONTEXT = b"SFILE1-AAD"
-SIGN_CONTEXT = b"SFILE1-SIGN"
+from .config import (
+    MAX_FILE_BYTES as MAX_FILE, MAX_PACKAGE_BYTES as MAX_ENVELOPE,
+    MAX_HEADER_BYTES as MAX_HEADER, MAX_METADATA_BYTES as MAX_METADATA,
+    WRAPPED_KEY_BYTES as WRAPPED_LEN, SIGNATURE_BYTES as SIGNATURE_LEN,
+    NONCE_BYTES as NONCE_LEN, GCM_TAG_BYTES as TAG_LEN,
+    MIN_CIPHERTEXT_BYTES as MIN_CIPHERTEXT, MAX_CIPHERTEXT_BYTES as MAX_CIPHERTEXT,
+    FORMAT_NAME as FORMAT, FORMAT_VERSION as VERSION, CIPHER_SUITE as SUITE,
+    AAD_CONTEXT, SIGNATURE_CONTEXT as SIGN_CONTEXT,
+)
+from .errors import ErrorCode, ShareError
+from .models import PackageHeader, Payload, RawEnvelope as ModelEnvelope
+
+MAX_PAYLOAD = 4 + MAX_METADATA + MAX_FILE
 
 _HEADER_KEYS = {"format", "version", "suite", "transfer_id",
                 "sender_sig_fp", "recipient_enc_fp"}
@@ -41,9 +38,10 @@ _FP_RE = re.compile(r"[0-9a-f]{64}")
 class EnvelopeError(ValueError):
     """Lỗi cấu trúc; code là PARSE (gói/header) hoặc PAYLOAD (sau giải mã)."""
 
-    def __init__(self, code: str, message: str):
+    def __init__(self, code: str, message: str, domain_code=None):
         super().__init__(message)
         self.code = code
+        self.domain_code = domain_code or (ErrorCode.PAYLOAD_INVALID if code == "PAYLOAD" else ErrorCode.INVALID_SCHEMA)
 
 
 class RawEnvelope(NamedTuple):
@@ -111,7 +109,7 @@ def _strict_json(data: bytes, code: str):
         return json.loads(data.decode("utf-8"), object_pairs_hook=_no_duplicates,
                           parse_constant=_reject_constant)
     except (UnicodeError, ValueError, RecursionError):
-        raise EnvelopeError(code, "JSON không hợp lệ") from None
+        raise EnvelopeError(code, "JSON không hợp lệ", ErrorCode.INVALID_JSON if code == "PARSE" else ErrorCode.PAYLOAD_INVALID) from None
 
 
 # ----------------------------------------------------------------------
@@ -136,10 +134,12 @@ def parse_header(header_raw: bytes) -> dict:
     header = _strict_json(header_raw, "PARSE")
     if not isinstance(header, dict) or set(header) != _HEADER_KEYS:
         raise EnvelopeError("PARSE", "Trường header không đúng")
-    if header["format"] != FORMAT or header["suite"] != SUITE:
+    if header["format"] != FORMAT:
         raise EnvelopeError("PARSE", "Định dạng hoặc bộ thuật toán không hỗ trợ")
+    if header["suite"] != SUITE:
+        raise EnvelopeError("PARSE", "Unsupported suite", ErrorCode.UNSUPPORTED_SUITE)
     if type(header["version"]) is not int or header["version"] != VERSION:
-        raise EnvelopeError("PARSE", "Phiên bản không hỗ trợ")
+        raise EnvelopeError("PARSE", "Phiên bản không hỗ trợ", ErrorCode.UNSUPPORTED_VERSION)
     for name, pattern in (("transfer_id", _ID_RE), ("sender_sig_fp", _FP_RE),
                           ("recipient_enc_fp", _FP_RE)):
         value = header[name]
@@ -156,13 +156,13 @@ def _check_parts(envelope: RawEnvelope) -> None:
     if len(envelope.header_raw) > MAX_HEADER:
         raise EnvelopeError("PARSE", "Header vượt giới hạn")
     if len(envelope.wrapped_key) != WRAPPED_LEN:
-        raise EnvelopeError("PARSE", "Độ dài khóa bọc không đúng")
+        raise EnvelopeError("PARSE", "Độ dài khóa bọc không đúng", ErrorCode.INVALID_LENGTH)
     if len(envelope.signature) != SIGNATURE_LEN:
-        raise EnvelopeError("PARSE", "Độ dài chữ ký không đúng")
+        raise EnvelopeError("PARSE", "Độ dài chữ ký không đúng", ErrorCode.INVALID_LENGTH)
     if len(envelope.nonce) != NONCE_LEN:
-        raise EnvelopeError("PARSE", "Độ dài nonce không đúng")
+        raise EnvelopeError("PARSE", "Độ dài nonce không đúng", ErrorCode.INVALID_LENGTH)
     if not MIN_CIPHERTEXT <= len(envelope.ciphertext) <= MAX_CIPHERTEXT:
-        raise EnvelopeError("PARSE", "Độ dài bản mã không đúng")
+        raise EnvelopeError("PARSE", "Độ dài bản mã không đúng", ErrorCode.INVALID_LENGTH)
 
 
 def serialize_envelope(envelope: RawEnvelope) -> bytes:
@@ -181,15 +181,15 @@ def serialize_envelope(envelope: RawEnvelope) -> bytes:
 def _decode_base64(value, limit: int) -> bytes:
     """Base64 nghiêm ngặt: đúng bảng chữ, đúng padding, không bit thừa."""
     if not isinstance(value, str) or not value.isascii():
-        raise EnvelopeError("PARSE", "Base64 không hợp lệ")
+        raise EnvelopeError("PARSE", "Base64 không hợp lệ", ErrorCode.INVALID_BASE64)
     if len(value) > (limit + 2) // 3 * 4:
-        raise EnvelopeError("PARSE", "Trường vượt giới hạn")
+        raise EnvelopeError("PARSE", "Trường vượt giới hạn", ErrorCode.INVALID_LENGTH)
     try:
         data = base64.b64decode(value, validate=True)
     except (binascii.Error, ValueError):
-        raise EnvelopeError("PARSE", "Base64 không hợp lệ") from None
+        raise EnvelopeError("PARSE", "Base64 không hợp lệ", ErrorCode.INVALID_BASE64) from None
     if base64.b64encode(data).decode("ascii") != value:
-        raise EnvelopeError("PARSE", "Base64 không chuẩn")
+        raise EnvelopeError("PARSE", "Base64 không chuẩn", ErrorCode.INVALID_BASE64)
     return data
 
 
@@ -255,3 +255,78 @@ def parse_payload(payload: bytes) -> tuple:
         raise EnvelopeError("PAYLOAD", "Metadata phải chỉ chứa filename")
     _validate_filename(metadata["filename"])
     return metadata["filename"], payload[offset:]
+
+
+def read_json(data, limit):
+    if not isinstance(data, bytes) or len(data) > limit:
+        raise ShareError(ErrorCode.INPUT_TOO_LARGE)
+    try:
+        return _strict_json(data, "PARSE")
+    except EnvelopeError as error:
+        raise ShareError(error.domain_code) from None
+
+
+def encode_json(value):
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"), allow_nan=False).encode("utf-8")
+
+
+def _safe_filename(name):
+    if not isinstance(name, str) or not name or len(name) > 255:
+        raise ShareError(ErrorCode.PAYLOAD_INVALID)
+    if any(ord(c) < 32 or ord(c) == 127 or c in '<>:"/\\|?*' for c in name):
+        raise ShareError(ErrorCode.PAYLOAD_INVALID)
+    stem = name.split(".")[0].upper()
+    if name.endswith((" ", ".")) or stem in {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}:
+        raise ShareError(ErrorCode.PAYLOAD_INVALID)
+
+
+def _domain_call(function, *args):
+    try:
+        return function(*args)
+    except EnvelopeError as error:
+        raise ShareError(error.domain_code) from None
+    except (TypeError, ValueError):
+        raise ShareError(ErrorCode.INVALID_LENGTH) from None
+
+
+class EnvelopeCodec:
+    fields = _ENVELOPE_KEYS
+
+    def build_header(self, header):
+        raw = encode_json(asdict(header))
+        _domain_call(parse_header, raw)
+        return raw
+
+    def build_payload(self, filename, data):
+        _safe_filename(filename)
+        if not isinstance(data, bytes) or len(data) > MAX_FILE:
+            raise ShareError(ErrorCode.INPUT_TOO_LARGE)
+        return _domain_call(build_payload, filename, data)
+
+    def parse_payload(self, data):
+        if not isinstance(data, bytes):
+            raise ShareError(ErrorCode.PAYLOAD_INVALID)
+        filename, raw = _domain_call(parse_payload, data)
+        _safe_filename(filename)
+        return Payload(filename, raw)
+
+    def build_aad(self, header_bytes, wrapped_key):
+        return _domain_call(build_aad, header_bytes, wrapped_key)
+
+    def build_signature_input(self, header_bytes, wrapped_key, nonce, ciphertext):
+        return _domain_call(build_signature_input, header_bytes, wrapped_key, nonce, ciphertext)
+
+    def serialize_envelope(self, envelope):
+        raw = RawEnvelope(envelope.header_bytes, envelope.wrapped_key, envelope.nonce,
+                          envelope.ciphertext, envelope.signature)
+        data = _domain_call(serialize_envelope, raw)
+        if self.parse_envelope(data).header != envelope.header:
+            raise ShareError(ErrorCode.INVALID_SCHEMA)
+        return data
+
+    def parse_envelope(self, data):
+        if not isinstance(data, bytes) or len(data) > MAX_ENVELOPE:
+            raise ShareError(ErrorCode.INPUT_TOO_LARGE)
+        raw = _domain_call(parse_envelope, data)
+        header = PackageHeader(**_domain_call(parse_header, raw.header_raw))
+        return ModelEnvelope(header, *raw)

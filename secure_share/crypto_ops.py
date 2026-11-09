@@ -8,6 +8,10 @@ gian thực thi hằng định, mã chưa được kiểm toán.
 from math import gcd, isqrt
 from os import urandom
 
+from cryptography.hazmat.primitives.asymmetric import rsa
+
+from .errors import ErrorCode, ShareError
+
 
 # ======================================================================
 # SHA-256 và MGF1
@@ -336,6 +340,10 @@ def wrap_key(aes_key: bytes, n: int, e: int = 65537, seed: bytes = None) -> byte
     return encrypted.to_bytes(384, "big")
 
 
+class AESKeyLengthError(ValueError):
+    pass
+
+
 def unwrap_key(wrapped_key: bytes, n: int, d: int) -> bytes:
     """Mở bọc bằng private key (n, d); mọi OAEP lỗi đều bị từ chối."""
     check_key(n, d)
@@ -349,11 +357,16 @@ def unwrap_key(wrapped_key: bytes, n: int, d: int) -> bytes:
     seed = xor_bytes(masked_seed, mgf1(masked_data, 32))
     data_block = xor_bytes(masked_data, mgf1(seed, len(masked_data)))
 
-    # Profile chỉ bọc 32 byte nên vị trí dấu 0x01 là cố định.
-    expected_prefix = sha256(b"") + bytes(286) + b"\x01"
-    if encoded[0] != 0 or data_block[:-32] != expected_prefix:
+    if encoded[0] != 0 or data_block[:32] != sha256(b""):
         raise ValueError("Khóa bọc RSA không hợp lệ")
-    return data_block[-32:]
+    padding_and_key = data_block[32:]
+    separator = padding_and_key.find(b"\x01")
+    if separator < 0 or any(padding_and_key[:separator]):
+        raise ValueError("Khóa bọc RSA không hợp lệ")
+    key = padding_and_key[separator + 1:]
+    if len(key) != 32:
+        raise AESKeyLengthError("AES key must be 32 bytes")
+    return key
 
 
 # ======================================================================
@@ -478,3 +491,72 @@ def generate_rsa_key(bits: int = 3072, e: int = 65537) -> tuple:
             continue
         lam = (p - 1) * (q - 1) // gcd(p - 1, q - 1)
         return p * q, e, modinv(e, lam), p, q
+
+
+def _public_numbers(key):
+    if not isinstance(key, rsa.RSAPublicKey):
+        raise ShareError(ErrorCode.PROFILE_INVALID)
+    numbers = key.public_numbers()
+    if key.key_size != 3072 or numbers.e != 65537:
+        raise ShareError(ErrorCode.PROFILE_INVALID)
+    return numbers
+
+
+def _private_numbers(key):
+    if not isinstance(key, rsa.RSAPrivateKey):
+        raise ShareError(ErrorCode.PROFILE_INVALID)
+    _public_numbers(key.public_key())
+    return key.private_numbers()
+
+
+class CryptoOps:
+    def generate_aes_key(self):
+        return urandom(32)
+
+    def generate_nonce(self):
+        return urandom(12)
+
+    def wrap_key(self, aes_key, public_key):
+        if not isinstance(aes_key, bytes) or len(aes_key) != 32:
+            raise ShareError(ErrorCode.AES_KEY_LENGTH_INVALID)
+        numbers = _public_numbers(public_key)
+        return wrap_key(aes_key, numbers.n, numbers.e)
+
+    def unwrap_key(self, wrapped_key, private_key):
+        numbers = _private_numbers(private_key)
+        try:
+            return unwrap_key(wrapped_key, numbers.public_numbers.n, numbers.d)
+        except AESKeyLengthError:
+            raise ShareError(ErrorCode.AES_KEY_LENGTH_INVALID) from None
+        except (ValueError, TypeError):
+            raise ShareError(ErrorCode.UNWRAP_FAILED) from None
+
+    def encrypt_payload(self, key, nonce, payload, aad):
+        try:
+            return encrypt_payload(payload, key, nonce, aad)
+        except (ValueError, TypeError):
+            raise ShareError(ErrorCode.INVALID_LENGTH) from None
+
+    def decrypt_payload(self, key, nonce, ciphertext, aad):
+        if not isinstance(key, bytes) or len(key) != 32 or not isinstance(nonce, bytes) or len(nonce) != 12:
+            raise ShareError(ErrorCode.INVALID_LENGTH)
+        try:
+            return decrypt_payload(ciphertext, key, nonce, aad)
+        except (ValueError, TypeError):
+            raise ShareError(ErrorCode.GCM_AUTH_FAILED) from None
+
+    def sign_package(self, message, private_key):
+        numbers = _private_numbers(private_key)
+        try:
+            return sign_package(message, numbers.public_numbers.n, numbers.d)
+        except (ValueError, TypeError):
+            raise ShareError(ErrorCode.INVALID_REQUEST) from None
+
+    def verify_signature(self, signature, message, public_key):
+        numbers = _public_numbers(public_key)
+        try:
+            valid = verify_signature(message, signature, numbers.n, numbers.e)
+        except (ValueError, TypeError):
+            valid = False
+        if not valid:
+            raise ShareError(ErrorCode.SIGNATURE_INVALID)
