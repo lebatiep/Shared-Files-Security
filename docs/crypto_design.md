@@ -12,6 +12,11 @@ và các ca liên quan ở trang 22–25.
   cài bằng Python, thay cho hướng dẫn gọi thư viện ở T3.3 trong PDF.
 - `int`, `pow` và `os.urandom` được phép dùng. JSON/Base64 là định dạng dữ
   liệu, không phải thư viện triển khai thuật toán mật mã.
+- Hằng số SHA-256 (căn bậc hai và bậc ba của các số nguyên tố đầu tiên) và
+  S-box AES (nghịch đảo trong GF(2^8) rồi biến đổi affine) được tính khi nạp
+  mô-đun, không chép bảng. Test so kết quả với bảng chuẩn FIPS 180-4 và FIPS 197.
+- Mã tự cài phục vụ nghiên cứu/học tập. Tốc độ không phải yêu cầu của dự án
+  này; xem `Document/issues.md` về giới hạn và lý do.
 - Chưa có `config.py`, `models.py`, `errors.py` của phần tích hợp hoặc
   giao diện khóa chính thức. Hằng số đang nằm tại nơi dùng; khi tích hợp
   cần đối chiếu và chuyển sang config chung của dự án.
@@ -51,8 +56,10 @@ sử dụng nonce với cùng khóa. Không dùng `random` cho khóa, nonce hay 
 Gói JSON ngoài có đúng năm field chuỗi Base64:
 `header_b64`, `wrapped_key_b64`, `nonce_b64`, `ciphertext_b64`, `signature_b64`.
 Việc serialize/parse, từ chối field trùng/thiếu/lạ, Base64 lỗi, phiên bản,
-suite, ID và fingerprint thuộc T3.5–T3.6, chưa được triển khai ở đây.
-Không được hiểu kết quả helper framing là xác nhận header hợp lệ hay đáng tin.
+suite, ID và fingerprint (T3.5–T3.6) do `envelope.py` thực hiện; xem
+`docs/package_format.md`. Không được hiểu kết quả helper framing hay
+`parse_header` là xác nhận header hợp lệ hay đáng tin: chỉ PSS đạt mới cho
+phép dùng giá trị trong H.
 
 Giới hạn C là kiểm tra ngoài, không chứng minh payload hợp lệ. C đủ tag vẫn
 có thể chứa payload bị cắt hoặc metadata sai. Tên tệp gốc nằm trong phần mã hóa.
@@ -126,24 +133,31 @@ là text hoặc từ chối một kiểu nội dung chỉ vì nó là binary.
 
 ## 6. Giao diện bàn giao
 
+Tên hàm theo hợp đồng nhóm (`PROJECT_STRUCTURE_AND_TASKS.md`). Mã nằm đúng
+cấu trúc đã chốt: `secure_share/crypto_ops.py` và `secure_share/envelope.py`.
+Hai module không import nhau; service chuyển AAD/M từ envelope sang crypto.
+
 | Module/hàm | Đầu vào → đầu ra |
 | --- | --- |
-| `aes.generate_key_nonce()` | Không có đầu vào → `(key32, nonce12)` |
-| `aes.seal_payload(payload, key, nonce, aad)` | bytes → C có tag |
-| `aes.open_payload(C, key, nonce, aad)` | bytes → payload sau xác thực |
-| `rsa.wrap(key, n, e=65537)` | Khóa AES 32 byte, public key → W |
-| `rsa.unwrap(W, n, d)` | W, private key → khóa AES đúng 32 byte hoặc lỗi |
-| `pss.sign(M, n, d)` | M, private key ký → S |
-| `pss.verify(M, S, n, e=65537)` | M, public key ký → bool |
-| `payload.pack_payload(filename, raw_file)` | Tên + bytes tệp → payload |
-| `payload.unpack_payload(payload)` | payload → `(filename, raw_file)` |
+| `crypto_ops.generate_key_nonce()` | Không có đầu vào → `(key32, nonce12)` |
+| `crypto_ops.encrypt_payload(payload, key, nonce, aad)` | bytes → C có tag |
+| `crypto_ops.decrypt_payload(C, key, nonce, aad)` | bytes → payload sau xác thực |
+| `crypto_ops.wrap_key(key, n, e=65537, seed=None)` | Khóa AES 32 byte, public key → W (`seed` chỉ cho test) |
+| `crypto_ops.unwrap_key(W, n, d)` | W, private key → khóa AES đúng 32 byte hoặc lỗi |
+| `crypto_ops.sign_package(M, n, d)` | M, private key ký → S |
+| `crypto_ops.verify_signature(M, S, n, e=65537)` | M, public key ký → bool |
+| `crypto_ops.generate_rsa_key(bits=3072)` | → `(n, e, d, p, q)`; cho Nhật dùng khi sinh hồ sơ |
+| `envelope.build_payload(filename, raw_file)` | Tên + bytes tệp → payload |
+| `envelope.parse_payload(payload)` | payload → `(filename, raw_file)` |
 | `envelope.frame(X)` | bytes → prefix độ dài + bytes gốc |
 | `envelope.build_aad(H, W)` | H/W → AAD |
 | `envelope.build_signature_input(H, W, N, C)` | H/W/N/C → M |
+| `envelope.build_header(id, sender_fp, recipient_fp)` / `parse_header(H)` | Tạo / kiểm schema header |
+| `envelope.serialize_envelope(RawEnvelope)` / `parse_envelope(bytes)` | 5 phần ↔ JSON ngoài |
 
-Các module thuật toán được giữ tách để dễ đọc, thay cho một file lớn
-`crypto_ops.py`. Khi tích hợp cần thống nhất đường import với Tiệp, không
-tạo hai bản thuật toán. Tên hàm dự kiến trong PDF không phải API bắt buộc.
+SHA-256 và MGF1 nằm trong `crypto_ops` (`sha256`, `mgf1`). Hằng số SHA-256 và
+S-box AES được sinh bằng toán lúc nạp mô-đun, không chép bảng. `pow(a, e, n)`
+của Python được phép dùng. Định dạng gói chi tiết: `docs/package_format.md`.
 
 Khóa hiện được truyền bằng số nguyên `n/e/d`; Nhật cần cung cấp các thành
 phần từ khóa đã mở và đã kiểm tra. Module RSA chỉ kiểm tra hình dạng n/số
@@ -186,7 +200,8 @@ Các module ở đây không đọc danh bạ, gọi UI, tự lưu tệp hoặc 
 Chạy từ thư mục repo, không cần cài thư viện:
 
 ```powershell
-python -m unittest -v
+python -m pytest -q
+python -m unittest discover -s tests -t .
 ```
 
 Các test gồm vector AES/GCM/SHA-256; OAEP/PSS đúng và sai; salt PSS sai độ
@@ -200,18 +215,53 @@ OAEP/GCM/payload. Không mô tả đây là khả năng của kẻ không có kh
 Các test hiện chỉ là unit và tích hợp các primitive trong bộ nhớ, không
 thay thế nghiệm thu service/UI hoặc xác nhận đạt toàn bộ 60 ID.
 
-Kiểm tra tại nhánh `feat/t3-1-to-t3-4`: 28 test đạt trên Python 3.14.
-Đã đối chiếu thêm 10 kích thước đầu vào với SHA-256 chuẩn và thư viện
-tham chiếu `cryptography` cài riêng trong thư mục tạm: GCM khớp từng byte,
-OAEP/PSS đọc chéo hai chiều với payload/framing thật. Thư viện tham chiếu
-không được import trong mã ứng dụng hoặc bộ test của repo và không phải
-dependency để chạy. Đây không phải kiểm toán bảo mật.
+Kết quả chạy (10/11/2026, Python 3.12 trên máy của Hoàng):
+`python -m pytest -q -k "not max-10MiB"` cho 296 test đạt, 190 subtest, 105 giây.
+**Ca gửi-nhận đúng 10 MiB (`max-10MiB`) bị loại khỏi lần chạy này vì quá lâu với
+AES tự cài; kết quả của ca đó chưa được xác nhận trong tài liệu này.** Trước đó,
+lần chạy ngày 09/11/2026 có 284 đạt và 2 lỗi của chính bộ test (id tham số 10 MiB
+vượt giới hạn biến môi trường Windows 32.767 ký tự); lỗi này đã được sửa bằng
+`ids=` trong `tests/integration/test_desktop_app.py` (các id còn lại thu thập
+bình thường).
+
+**Đối chiếu độc lập (10/11/2026).** Script chạy ngoài repo, so mã tự cài
+(`crypto_ops.py` hiện tại, sau khi gộp và sau khi sinh hằng số bằng toán) với
+`hashlib` và thư viện `cryptography` cài riêng. Thư viện chỉ làm chuẩn so sánh,
+không được import trong mã ứng dụng hay trong test của phần mật mã. Kết quả:
+
+- SHA-256: khớp `hashlib` ở 204 độ dài (0–199, 1.000, 4.095, 4.096, 65.535).
+- AES-256-GCM: mã hóa khớp từng byte với `AESGCM` ở 96 tổ hợp (16 độ dài dữ
+  liệu × 6 độ dài AAD, gồm 0, 15, 16, 17, 100 byte) và giải mã bản của thư viện
+  đúng ở cả 96 tổ hợp.
+- Lật 1 bit ở từng vị trí của một gói 56 byte: cả hai phía đều từ chối.
+- OAEP: 20 lần, tôi bọc thì thư viện mở và thư viện bọc thì tôi mở.
+- PSS: 8 kích thước thông điệp (0 đến 100.000 byte), tôi ký thì thư viện xác minh
+  và thư viện ký thì tôi xác minh; thông điệp bị sửa bị từ chối.
+
+Phạm vi và giới hạn của đối chiếu: một khóa RSA-3072 mỗi vai trò (khóa test), một
+lần chạy, dữ liệu ngẫu nhiên; không có vector NIST đầy đủ cho GCM, không kiểm thời
+gian hằng, không phải kiểm toán bảo mật. Script không nằm trong repo.
+
+**Gói lỗi có manifest.** `python -m tools.make_fixtures --out DIR` sinh 28 gói
+(`good`, A02, A03, A05, A07–A12, P01–P04, P06) và `manifest.json` ghi trường đã
+đổi, tầng dự kiến dừng và SHA-256. `tests/unit/test_make_fixtures.py` kiểm từng
+gói dừng đúng tầng (PARSE, SIGNATURE, UNWRAP, UNWRAP_KEY_LENGTH, GCM, PAYLOAD,
+OK) bằng đường nhận ở mức mô-đun, không qua service. Gói lỗi sâu được ký lại bằng
+khóa ký test (`tests/rsa_fixtures.py`); đó là fixture của người kiểm thử.
+
+**Bộ nối.** `CryptoOps` (trong `crypto_ops.py`) và `EnvelopeCodec` (trong
+`envelope.py`) bọc các hàm trên để service dùng: nhận đối tượng khóa của
+`keys.py`, đổi lỗi sang `ErrorCode`, và `verify_signature` trả `None` khi đúng,
+ném lỗi khi sai. `unwrap_key` ném `AESKeyLengthError` để phân biệt khóa AES sai
+độ dài (ca A08) với OAEP hỏng (ca A07).
 
 Liên hệ các ID ở mức module: S01/S02/S03/S04/S08, R02,
 A02/A03/A07/A08/A09/A10/A11/A12. Các ca cần trust/recipient, parser đầy đủ,
 I/O và UI chỉ được nghiệm thu khi có phần tích hợp tương ứng.
 
-Chưa tích hợp app, chưa benchmark AES trên tệp 10 MiB và chưa kiểm toán bảo
-mật. Python không bảo đảm thời gian hằng, kể cả lũy thừa RSA với private key
-và tra bảng AES. Mã phục vụ học tập; không cam kết bảo mật 256 bit toàn hệ
-thống, forward secrecy, thu hồi gói offline hoặc ngăn người nhận chuyển tiếp.
+Chưa tích hợp app và chưa kiểm toán bảo mật. Chưa có số đo benchmark chính
+thức (T5.7 của Quang); một phép đo thô cho thấy AES-GCM tự cài rất chậm, xem
+`Document/issues.md`. Python không bảo đảm thời gian hằng, kể cả lũy thừa RSA
+với private key (`pow`, không CRT, không blinding), so sánh khối OAEP và tra
+bảng AES. Mã phục vụ học tập; không cam kết bảo mật 256 bit toàn hệ thống,
+forward secrecy, thu hồi gói offline hoặc ngăn người nhận chuyển tiếp.
