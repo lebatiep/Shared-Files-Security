@@ -54,7 +54,13 @@ def send(app, tmp_path, data=b'Private survey\x00\xff'):
     return source, package
 
 
-@pytest.mark.parametrize('data', [b'', b'a', 'Tiếng Việt 日本語'.encode(), bytes(range(256)) * 10, b'x' * MAX_FILE_BYTES])
+# Explicit ids: pytest puts the id in PYTEST_CURRENT_TEST, and a 10 MiB id
+# exceeds the 32,767-character environment limit on Windows.
+@pytest.mark.parametrize('data', [b'', b'a', 'Tiếng Việt 日本語'.encode(), bytes(range(256)) * 10, b'x' * MAX_FILE_BYTES],
+                         ids=['empty', 'one-byte', 'unicode-text', 'binary-2560-bytes', 'max-10MiB'])
+@pytest.mark.case("S03")
+@pytest.mark.case("R01")
+@pytest.mark.case("S01")
 def test_real_disk_roundtrip(app, tmp_path, data):
     source, package = send(app, tmp_path, data)
     # Reload every provider to prove persistence rather than shared in-memory keys.
@@ -72,6 +78,7 @@ def test_real_disk_roundtrip(app, tmp_path, data):
     receiver.service.discard_prepared(again.prepared.handle)
 
 
+@pytest.mark.case("S04")
 def test_oversized_file_never_creates_package(app, tmp_path):
     source = tmp_path / 'large.bin'
     source.write_bytes(b'x' * (MAX_FILE_BYTES + 1))
@@ -81,6 +88,8 @@ def test_oversized_file_never_creates_package(app, tmp_path):
     assert not output.exists()
 
 
+@pytest.mark.case("A06")
+@pytest.mark.case("I07")
 @pytest.mark.parametrize('profile,password,code', [('mallory', PASSWORD, ErrorCode.RECIPIENT_KEY_NOT_FOUND), ('bob', b'wrong', ErrorCode.KEY_UNLOCK_FAILED)])
 def test_wrong_recipient_or_password(app, tmp_path, profile, password, code):
     _, package = send(app, tmp_path)
@@ -89,6 +98,7 @@ def test_wrong_recipient_or_password(app, tmp_path, profile, password, code):
     assert not app.service.has_prepared
 
 
+@pytest.mark.case("A03")
 @pytest.mark.parametrize('field', EnvelopeCodec.fields)
 def test_each_authenticated_component_rejects_tampering(app, tmp_path, field):
     _, package = send(app, tmp_path)
@@ -102,6 +112,8 @@ def test_each_authenticated_component_rejects_tampering(app, tmp_path, field):
     assert not app.service.has_prepared
 
 
+@pytest.mark.case("A07")
+@pytest.mark.case("A09")
 @pytest.mark.parametrize('field,expected', [('wrapped_key', ErrorCode.UNWRAP_FAILED), ('ciphertext', ErrorCode.GCM_AUTH_FAILED)])
 def test_signed_but_invalid_crypto_is_rejected(app, tmp_path, field, expected):
     _, package = send(app, tmp_path)
@@ -118,6 +130,8 @@ def test_signed_but_invalid_crypto_is_rejected(app, tmp_path, field, expected):
     assert not app.service.has_prepared
 
 
+@pytest.mark.case("S06")
+@pytest.mark.case("L02")
 def test_unverified_and_disabled_contacts_are_not_usable(app, tmp_path):
     app.trust.import_contact('alice', 'mallory', app.keys.public_bundle('mallory'))
     with pytest.raises(ShareError):
@@ -131,6 +145,7 @@ def test_unverified_and_disabled_contacts_are_not_usable(app, tmp_path):
     assert result.error.code is ErrorCode.UNTRUSTED_RECIPIENT
 
 
+@pytest.mark.case("A01")
 def test_untrusted_sender_is_rejected_before_password(app, tmp_path):
     _, package = send(app, tmp_path)
     app.trust.disable_contact('bob', 'alice')
@@ -138,6 +153,7 @@ def test_untrusted_sender_is_rejected_before_password(app, tmp_path):
     assert result.error.code is ErrorCode.UNTRUSTED_SENDER
 
 
+@pytest.mark.case("I06")
 def test_key_replacement_requires_new_verification(app):
     with pytest.raises(ShareError) as error:
         app.trust.import_contact('alice', 'bob', app.keys.public_bundle('mallory'))
@@ -146,6 +162,7 @@ def test_key_replacement_requires_new_verification(app):
     assert contact.status is TrustStatus.UNVERIFIED
 
 
+@pytest.mark.case("L01")
 def test_rotation_retains_old_decryption_keys(app, tmp_path):
     _, package = send(app, tmp_path)
     previous = app.keys.get_profile('bob')
@@ -166,6 +183,7 @@ def test_private_keys_are_encrypted_and_exports_public_only(app):
     assert PASSWORD not in exported
 
 
+@pytest.mark.case("L03")
 def test_backup_restore_validates_password_and_keeps_fingerprints(app, tmp_path):
     backup = app.keys.backup_profile('bob', PASSWORD)
     assert PASSWORD not in backup
@@ -187,6 +205,7 @@ def test_profile_identifiers_cannot_escape_store(app, profile):
         app.keys.create_profile(profile, 'Name', PASSWORD)
 
 
+@pytest.mark.case("I02")
 @pytest.mark.parametrize('password', [b'', b'short', b'\xff' * 12, b'a' * 1025])
 def test_bad_creation_password_leaves_no_profile(app, password):
     with pytest.raises(ShareError):
@@ -194,6 +213,8 @@ def test_bad_creation_password_leaves_no_profile(app, password):
     assert not (app.keys.profiles / 'new.json').exists()
 
 
+@pytest.mark.case("I09")
+@pytest.mark.case("I10")
 @pytest.mark.parametrize('change', ['same_key', 'small_rsa', 'ec_key', 'garbage', 'duplicate_json', 'extra_field'])
 def test_invalid_public_bundles_are_never_imported(app, change):
     from cryptography.hazmat.primitives import serialization
@@ -216,6 +237,8 @@ def test_invalid_public_bundles_are_never_imported(app, change):
     assert not (app.keys.root / 'contacts' / 'alice' / 'new.json').exists()
 
 
+@pytest.mark.case("R02")
+@pytest.mark.case("R03")
 def test_outer_formatting_and_package_filename_do_not_change_signature(app, tmp_path):
     _, package = send(app, tmp_path)
     renamed = tmp_path / 'other-name.sfile'
@@ -225,6 +248,7 @@ def test_outer_formatting_and_package_filename_do_not_change_signature(app, tmp_
     app.service.discard_prepared(result.prepared.handle)
 
 
+@pytest.mark.case("S08")
 def test_repeated_send_uses_fresh_randomness(app, tmp_path):
     source, package = send(app, tmp_path)
     second = tmp_path / 'second.sfile'
@@ -237,6 +261,7 @@ def test_repeated_send_uses_fresh_randomness(app, tmp_path):
     assert a.ciphertext != b.ciphertext
 
 
+@pytest.mark.case("R07")
 def test_cancel_prepared_does_not_write_plaintext(app, tmp_path):
     _, package = send(app, tmp_path)
     before = set(tmp_path.iterdir())
@@ -246,12 +271,16 @@ def test_cancel_prepared_does_not_write_plaintext(app, tmp_path):
     assert not app.service.has_prepared
 
 
+@pytest.mark.case("A11")
 @pytest.mark.parametrize('data', [b'', b'\x00\x00\x10\x01', b'\x00\x00\x00\x0a{}', b'\x00\x00\x00\x02[]'])
 def test_payload_framing_errors(data):
     with pytest.raises(ShareError):
         EnvelopeCodec().parse_payload(data)
 
 
+@pytest.mark.case("R06")
+@pytest.mark.case("O02")
+@pytest.mark.case("O03")
 def test_protected_path_and_retry_after_failed_save(app, tmp_path):
     _, package = send(app, tmp_path)
     prepared = app.service.prepare_receive(ReceiveRequest('bob', package, PASSWORD)).prepared
@@ -281,6 +310,8 @@ def test_history_failure_does_not_undo_saved_file(app, tmp_path):
     assert output.exists()
 
 
+@pytest.mark.case("R04")
+@pytest.mark.case("R05")
 @pytest.mark.parametrize('name', ['../evil', 'a/b', 'a\\b', 'a:b', 'CON', 'NUL.txt', 'COM1', 'trailing.', 'trailing ', '\x00', '\n', ''])
 def test_unsafe_payload_names_rejected(name):
     codec = EnvelopeCodec()
@@ -289,6 +320,7 @@ def test_unsafe_payload_names_rejected(name):
         codec.parse_payload(len(metadata).to_bytes(4, 'big') + metadata + b'data')
 
 
+@pytest.mark.case("P01")
 @pytest.mark.parametrize('data', [b'{}', b'[]', b'null', b'{', b'\xff', b'{"a":1,"a":2}', b'{"a":NaN}', b'[' * 2000])
 def test_malformed_envelopes(data):
     with pytest.raises(ShareError):
@@ -325,6 +357,7 @@ def test_strict_envelope_schema(app, tmp_path, mutation):
         EnvelopeCodec().parse_envelope(encode_json(obj))
 
 
+@pytest.mark.case("O03")
 def test_storage_no_clobber_race(tmp_path, monkeypatch):
     output = tmp_path / 'output'
     real_link = os.link
@@ -339,6 +372,7 @@ def test_storage_no_clobber_race(tmp_path, monkeypatch):
     assert not list(tmp_path.glob('.sfile-*'))
 
 
+@pytest.mark.case("O05")
 def test_storage_failure_preserves_existing_file(tmp_path, monkeypatch):
     output = tmp_path / 'output'
     output.write_bytes(b'old')
@@ -351,6 +385,7 @@ def test_storage_failure_preserves_existing_file(tmp_path, monkeypatch):
     assert not list(tmp_path.glob('.sfile-*'))
 
 
+@pytest.mark.case("O02")
 def test_hardlink_alias_to_private_key_is_protected(app, tmp_path):
     source = app.keys.profiles / 'bob.json'
     alias = tmp_path / 'alias'
@@ -401,3 +436,26 @@ def test_tk_send_and_receive_with_real_workers(app, tmp_path, monkeypatch):
         assert not errors
     finally:
         window.close()
+
+
+def _zip_bytes():
+    import io
+    import zipfile
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, 'w') as archive:
+        archive.writestr('inside.txt', 'archive member')
+    return buffer.getvalue()
+
+
+@pytest.mark.case('P08')
+@pytest.mark.parametrize('data', [_zip_bytes(), b'@echo off\r\necho should never run\r\n', b'MZ\x90\x00 pretend executable'],
+                         ids=['zip-archive', 'batch-script', 'executable-header'])
+def test_executable_looking_content_is_saved_as_plain_bytes(app, tmp_path, data):
+    _, package = send(app, tmp_path, data)
+    prepared = app.service.prepare_receive(ReceiveRequest('bob', package, PASSWORD)).prepared
+    before = {path.name for path in tmp_path.iterdir()}
+    output = tmp_path / 'restored.bin'
+    assert app.service.save_received(prepared.handle, output).status is OperationStatus.SUCCESS
+    assert output.read_bytes() == data
+    # Nothing was extracted, executed or opened: only the chosen output appeared.
+    assert {path.name for path in tmp_path.iterdir()} == before | {'restored.bin'}

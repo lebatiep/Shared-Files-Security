@@ -4,6 +4,7 @@ These doubles are not cryptography or production adapters. Real AES/RSA tests
 are separate; collaborator implementations still need their own acceptance.
 """
 
+import pytest
 from dataclasses import asdict, replace
 import hashlib
 import json
@@ -283,6 +284,7 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(self.history.records, [("bob", prepared.transfer_id)])
         self.assertFalse(self.service.has_prepared)
 
+    @pytest.mark.case("S01")
     def test_empty_file_round_trip(self):
         self.storage.files[self.source] = b""
         result = self.prepared()
@@ -306,6 +308,7 @@ class ServiceTests(unittest.TestCase):
         self.service.save_received(result.prepared.handle, self.output)
         self.assertEqual(self.storage.files[self.output], self.content)
 
+    @pytest.mark.case("A01")
     def test_untrusted_sender_stops_before_verify(self):
         self.send()
         self.events.clear()
@@ -319,6 +322,7 @@ class ServiceTests(unittest.TestCase):
         self.trust.sender = replace(self.trust.sender, profile_id="alice")
         self.assert_failed(self.prepared(), ErrorCode.UNTRUSTED_SENDER)
 
+    @pytest.mark.case("A02")
     def test_signature_failure_stops_before_private_key_unlock(self):
         self.send()
         self.events.clear()
@@ -333,6 +337,7 @@ class ServiceTests(unittest.TestCase):
         self.crypto.verify_return = False
         self.assert_failed(self.prepared(), ErrorCode.SIGNATURE_INVALID)
 
+    @pytest.mark.case("A06")
     def test_wrong_recipient_stops_before_unwrap(self):
         self.send()
         self.events.clear()
@@ -351,23 +356,27 @@ class ServiceTests(unittest.TestCase):
         self.keys.recipient_override = KeyReference("alice", BOB_ENC, KeyRole.ENCRYPTION, Path("wrong.pem"))
         self.assert_failed(self.prepared(), ErrorCode.RECIPIENT_KEY_NOT_FOUND)
 
+    @pytest.mark.case("I07")
     def test_bad_passphrase_is_a_safe_failure(self):
         self.send()
         result = self.prepared(passphrase=b"never-echo-this-passphrase")
         self.assert_failed(result, ErrorCode.KEY_UNLOCK_FAILED, ProcessingStage.KEY_UNLOCK)
         self.assertNotIn("never-echo", repr(result))
 
+    @pytest.mark.case("A07")
     def test_unwrap_failure_has_no_prepared_plaintext(self):
         self.send()
         self.crypto.fail = "unwrap"
         self.assert_failed(self.prepared(), ErrorCode.UNWRAP_FAILED, ProcessingStage.UNWRAP)
         self.assertFalse(self.service.has_prepared)
 
+    @pytest.mark.case("A08")
     def test_unwrapped_aes_key_length_is_checked(self):
         self.send()
         self.crypto.unwrapped_key = b"K" * 31
         self.assert_failed(self.prepared(), ErrorCode.AES_KEY_LENGTH_INVALID, ProcessingStage.UNWRAP)
 
+    @pytest.mark.case("A09")
     def test_gcm_failure_stops_before_payload_and_save(self):
         self.send()
         self.events.clear()
@@ -376,6 +385,7 @@ class ServiceTests(unittest.TestCase):
         self.assertNotIn("payload", self.events)
         self.assertNotIn("save", self.events)
 
+    @pytest.mark.case("A12")
     def test_oversized_decrypted_file_is_rejected(self):
         self.send()
         self.codec.payload_override = Payload("x", b"x" * (MAX_FILE_BYTES + 1))
@@ -396,6 +406,7 @@ class ServiceTests(unittest.TestCase):
         self.assert_failed(self.send(), ErrorCode.INPUT_TOO_LARGE)
         self.assertEqual(self.storage.writes, [])
 
+    @pytest.mark.case("S04")
     def test_input_cap_is_defended_even_if_storage_breaks_contract(self):
         self.storage.forced_read = b"x" * (MAX_FILE_BYTES + 1)
         self.assert_failed(self.send(), ErrorCode.INPUT_TOO_LARGE, ProcessingStage.READ)
@@ -422,6 +433,7 @@ class ServiceTests(unittest.TestCase):
         self.mutate_package(header=replace(env.header, version=True))
         self.assert_failed(self.prepared(), ErrorCode.UNSUPPORTED_VERSION)
 
+    @pytest.mark.case("S06")
     def test_send_requires_trusted_recipient_in_same_profile(self):
         for recipient in (
             replace(self.trust.recipient, status=TrustStatus.UNVERIFIED),
@@ -459,6 +471,7 @@ class ServiceTests(unittest.TestCase):
         self.assertNotIn("secret path", repr(result))
         self.assertTrue(self.service.has_prepared)
 
+    @pytest.mark.case("R07")
     def test_discard_writes_nothing_and_invalidates_handle(self):
         ready = self.prepared()
         writes = len(self.storage.writes)
@@ -468,6 +481,7 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(self.history.records, [])
         self.assert_failed(self.service.save_received(ready.prepared.handle, self.output), ErrorCode.INVALID_HANDLE)
 
+    @pytest.mark.case("O06")
     def test_prepared_operation_blocks_new_work(self):
         ready = self.prepared()
         self.assert_failed(self.send(), ErrorCode.BUSY)
@@ -528,6 +542,7 @@ class ServiceTests(unittest.TestCase):
         self.assertIn("verify", self.events)
         self.assertIn("decrypt", self.events)
 
+    @pytest.mark.case("L04")
     def test_duplicate_warns_but_allows_deliberate_reopen(self):
         first = self.prepared()
         self.service.save_received(first.prepared.handle, self.output)
@@ -560,6 +575,7 @@ class ServiceTests(unittest.TestCase):
         self.assertNotIn("private.pem", repr(result))
         self.assertNotIn("plaintext", repr(result))
 
+    @pytest.mark.case("O06")
     def test_real_concurrent_call_returns_busy(self):
         self.send()
         entered, release = Event(), Event()

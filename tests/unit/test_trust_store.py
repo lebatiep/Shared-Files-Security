@@ -49,6 +49,7 @@ def test_same_keys_preserve_name_status_and_disk(store, bundles, status, replace
     assert restarted.list_contacts('alice')[0].status is status
 
 
+@pytest.mark.case("I06")
 def test_changed_pair_requires_replacement_and_reverification(store, bundles):
     original = verify(store, store.import_contact('alice', 'bob', bundles[0]))
     with pytest.raises(ShareError) as error:
@@ -62,6 +63,7 @@ def test_changed_pair_requires_replacement_and_reverification(store, bundles):
     assert verify(store, changed).status is TrustStatus.VERIFIED
 
 
+@pytest.mark.case("I05")
 @pytest.mark.parametrize('wrong', [None, '0' * 64, '\u00e9' * 64])
 @pytest.mark.parametrize('field', ['encryption', 'signing'])
 def test_wrong_fingerprint_does_not_verify(store, bundles, wrong, field):
@@ -74,6 +76,31 @@ def test_wrong_fingerprint_does_not_verify(store, bundles, wrong, field):
     assert store.list_contacts('alice')[0].status is TrustStatus.UNVERIFIED
 
 
+@pytest.mark.case("I04")
+def test_correct_fingerprints_verify_and_make_the_contact_usable(store, bundles):
+    contact = store.import_contact('alice', 'bob', bundles[0])
+    assert contact.status is TrustStatus.UNVERIFIED
+    with pytest.raises(ShareError):
+        store.resolve_recipient('alice', 'bob')
+    verified = verify(store, contact)
+    assert verified.status is TrustStatus.VERIFIED
+    assert store.resolve_recipient('alice', 'bob').encryption_fingerprint == contact.encryption_fingerprint
+    assert store.resolve_sender('alice', contact.signing_fingerprint).contact_id == 'bob'
+
+
+@pytest.mark.case("I10")
+def test_swapped_role_fingerprints_do_not_verify(store, bundles):
+    # I10: the encryption and signing fingerprints must each match their own role.
+    contact = store.import_contact('alice', 'bob', bundles[0])
+    assert contact.encryption_fingerprint != contact.signing_fingerprint
+    with pytest.raises(ShareError) as error:
+        store.verify_contact('alice', 'bob', contact.signing_fingerprint, contact.encryption_fingerprint)
+    assert error.value.code is ErrorCode.UNTRUSTED_RECIPIENT
+    assert store.list_contacts('alice')[0].status is TrustStatus.UNVERIFIED
+
+
+@pytest.mark.case("L02")
+@pytest.mark.case("A01")
 def test_disabled_contact_cannot_be_verified_or_resolved(store, bundles):
     contact = verify(store, store.import_contact('alice', 'bob', bundles[0]))
     store.disable_contact('alice', 'bob')

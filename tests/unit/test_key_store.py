@@ -1,3 +1,4 @@
+import pytest
 import copy
 import json
 from pathlib import Path
@@ -39,6 +40,7 @@ class KeyStoreTests(unittest.TestCase):
             operation()
         self.assertEqual(raised.exception.code, code)
 
+    @pytest.mark.case("I01")
     def test_generated_keys_are_distinct_encrypted_rsa3072(self):
         obj = json.loads(self.initial)
         keys = []
@@ -53,6 +55,8 @@ class KeyStoreTests(unittest.TestCase):
             keys.append(private.public_key().public_numbers())
         self.assertNotEqual(*keys)
 
+    @pytest.mark.case("I03")
+    @pytest.mark.case("L01")
     def test_rotation_preserves_old_keys_across_restart_and_restore(self):
         self.path.write_bytes(self.rotated)
         restarted = KeyStore(self.directory.name)
@@ -68,6 +72,7 @@ class KeyStoreTests(unittest.TestCase):
                     if role == KeyRole.ENCRYPTION:
                         self.assertEqual(restored.resolve_decryption_key('alice', fp).fingerprint, fp)
 
+    @pytest.mark.case("I07")
     def test_wrong_password_does_not_change_profile(self):
         for operation in (self.store.rotate_keys, self.store.backup_profile):
             self.assert_error(ErrorCode.KEY_UNLOCK_FAILED, lambda: operation('alice', b'incorrect-password'))
@@ -96,6 +101,7 @@ class KeyStoreTests(unittest.TestCase):
         self.assertEqual(list(self.path.parent.iterdir()), [self.path])
         KeyStore(self.directory.name).backup_profile('alice', PASSWORD)
 
+    @pytest.mark.case("I02")
     def test_invalid_creation_inputs_do_not_write(self):
         for password in (b' ' * 12, b'short', b'\xff' * 12, 'correct-test-passphrase', b'a' * 1025):
             self.assert_error(ErrorCode.INVALID_REQUEST, lambda: self.store.create_profile('bob', 'Bob', password))
@@ -105,6 +111,7 @@ class KeyStoreTests(unittest.TestCase):
             self.assert_error(ErrorCode.PROFILE_INVALID, lambda: self.store.create_profile('bob', name, PASSWORD))
         self.assertEqual(list(self.path.parent.iterdir()), [self.path])
 
+    @pytest.mark.case("I10")
     def test_wrong_role_and_duplicate_keys_are_rejected(self):
         profile = self.store.get_profile('alice')
         self.assert_error(ErrorCode.RECIPIENT_KEY_NOT_FOUND,
@@ -114,6 +121,7 @@ class KeyStoreTests(unittest.TestCase):
         self.path.write_text(json.dumps(obj))
         self.assert_error(ErrorCode.PROFILE_INVALID, lambda: self.store.get_profile('alice'))
 
+    @pytest.mark.case("I08")
     def test_incomplete_private_pem_is_rejected(self):
         obj = json.loads(self.initial)
         obj['generations'][0]['encryption']['private'] = '-----BEGIN ENCRYPTED PRIVATE KEY-----garbage'
@@ -124,6 +132,7 @@ class KeyStoreTests(unittest.TestCase):
         with patch('secure_share.keys.serialization.load_pem_private_key', side_effect=UnsupportedAlgorithm('secret')):
             self.assert_error(ErrorCode.KEY_UNLOCK_FAILED, lambda: self.store.backup_profile('alice', PASSWORD))
 
+    @pytest.mark.case("I09")
     def test_public_key_boundary_rejects_wrong_parameters_and_private_pem(self):
         public = load_public(json.loads(self.initial)['generations'][0]['encryption']['public'])
         numbers = public.public_numbers()

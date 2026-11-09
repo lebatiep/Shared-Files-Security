@@ -1,5 +1,6 @@
 """Kiểm thử envelope: framing, header, JSON ngoài, payload và các giới hạn."""
 
+import pytest
 import base64
 import json
 import unittest
@@ -136,10 +137,12 @@ class EnvelopeTests(unittest.TestCase):
         raw = parts(header_raw=spaced)
         self.assertEqual(env.parse_envelope(env.serialize_envelope(raw)).header_raw, spaced)
 
+    @pytest.mark.case("R02")
     def test_outer_json_may_be_reformatted(self):
         reordered = json.dumps(dict(reversed(list(json.loads(outer()).items()))), indent=2)
         self.assertEqual(env.parse_envelope(reordered.encode()), parts())
 
+    @pytest.mark.case("P01")
     def test_not_json(self):
         for bad in (b"%PDF-1.7", b"", b'{"a":', outer() + outer(), outer() + b"x",
                     b"[]", b"null", b'{"a":NaN}', b"\xff\xfe"):
@@ -147,6 +150,7 @@ class EnvelopeTests(unittest.TestCase):
                 env.parse_envelope(bad)
             self.assertEqual(ctx.exception.code, "PARSE")
 
+    @pytest.mark.case("P02")
     def test_wrong_fields(self):
         good = json.loads(outer())
         missing = {k: v for k, v in good.items() if k != "nonce_b64"}
@@ -158,6 +162,7 @@ class EnvelopeTests(unittest.TestCase):
             with self.assertRaises(EnvelopeError):
                 env.parse_envelope(bad)
 
+    @pytest.mark.case("P03")
     def test_bad_base64(self):
         good = base64.b64encode(bytes(12)).decode()
         for bad in (good[:-1] + "!", good[:-2], good + "=", good[:4] + "\n" + good[4:],
@@ -165,6 +170,7 @@ class EnvelopeTests(unittest.TestCase):
             with self.subTest(bad=bad), self.assertRaises(EnvelopeError):
                 env.parse_envelope(outer(nonce_b64=bad))
 
+    @pytest.mark.case("P06")
     def test_block_lengths(self):
         for name in ("wrapped_key", "signature"):
             for size in (0, 383, 385):
@@ -179,6 +185,7 @@ class EnvelopeTests(unittest.TestCase):
         env.serialize_envelope(parts(ciphertext=bytes(16)))
         env.serialize_envelope(parts(ciphertext=bytes(env.MAX_CIPHERTEXT)))
 
+    @pytest.mark.case("P07")
     def test_outer_cap(self):
         padded = outer() + b" " * (env.MAX_ENVELOPE - len(outer()))
         self.assertEqual(len(padded), env.MAX_ENVELOPE)
@@ -195,6 +202,8 @@ class HeaderTests(unittest.TestCase):
     def test_valid(self):
         self.assertEqual(env.parse_header(header_json())["version"], 1)
 
+    @pytest.mark.case("P04")
+    @pytest.mark.case("P05")
     def test_rejected(self):
         bad_headers = {
             "format": header_json(format="SFILE2"),
@@ -218,6 +227,7 @@ class HeaderTests(unittest.TestCase):
             with self.subTest(name), self.assertRaises(EnvelopeError):
                 env.parse_header(data)
 
+    @pytest.mark.case("P05")
     def test_size_limit(self):
         padding = b" " * (env.MAX_HEADER - len(header_json()))
         self.assertEqual(len(header_json() + padding), env.MAX_HEADER)
@@ -259,6 +269,7 @@ class PayloadTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             parse_payload(packed + b"x")
 
+    @pytest.mark.case("A11")
     def test_invalid_framing(self):
         for data in (b"", b"\0" * 3, bytes(4), b"\0\0\0\x10{}",
                      (MAX_METADATA + 1).to_bytes(4, "big") + bytes(4097),
@@ -266,6 +277,7 @@ class PayloadTests(unittest.TestCase):
             with self.subTest(data=data[:20]), self.assertRaises(ValueError):
                 parse_payload(data)
 
+    @pytest.mark.case("A12")
     def test_invalid_metadata(self):
         invalid = [b"\xff", b"", b"{", b"[]", b"null", b"1", b"true", b'"x"',
                    b"{}", b'{"filename":"x","extra":1}',

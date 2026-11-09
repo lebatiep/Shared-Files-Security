@@ -1,5 +1,6 @@
 """Kiểm thử primitive mật mã tự cài. Chạy: python -m pytest tests/unit hoặc python -m unittest discover -s tests -t ."""
 
+import pytest
 import unittest
 
 from secure_share.crypto_ops import (
@@ -97,6 +98,7 @@ class CryptoTests(unittest.TestCase):
         self.assertNotEqual(first[0], second[0])
         self.assertNotEqual(first[1], second[1])
 
+    @pytest.mark.case("A08")
     def test_oaep_rejects_wrong_key_length_after_decode(self):
         # Fixture OAEP hợp lệ nhưng chứa khóa AES sai độ dài, không phải attacker giả chữ ký.
         for length in (0, 16, 31, 33):

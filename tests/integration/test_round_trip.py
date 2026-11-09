@@ -4,6 +4,7 @@
 Fixture lỗi ở đây do bộ test tạo và ký bằng khóa test, không mô phỏng kẻ giả chữ ký.
 """
 
+import pytest
 import base64
 import json
 import unittest
@@ -47,6 +48,8 @@ def receive(blob):
 
 
 class RoundTripTests(unittest.TestCase):
+    @pytest.mark.case("R01")
+    @pytest.mark.case("S01")
     def test_send_receive(self):
         for raw in (b"", "Nội dung tệp của Quang".encode(), bytes(range(256)), urandom(5000)):
             with self.subTest(size=len(raw)):
@@ -56,6 +59,7 @@ class RoundTripTests(unittest.TestCase):
         self.assertNotEqual((N, D), (SIGN_N, SIGN_D))
         self.assertFalse(verify_signature(b"m", sign_package(b"m", SIGN_N, SIGN_D), N))
 
+    @pytest.mark.case("S08")
     def test_same_file_sent_twice_gives_different_packages(self):
         first, second = send(b"cung mot tep"), send(b"cung mot tep")
         self.assertNotEqual(first, second)
@@ -64,6 +68,8 @@ class RoundTripTests(unittest.TestCase):
             self.assertNotEqual(parts[0][index], parts[1][index])
         self.assertEqual(receive(first), receive(second))
 
+    @pytest.mark.case("A02")
+    @pytest.mark.case("A03")
     def test_tampering_any_part_breaks_signature(self):
         parts = parse_envelope(send(b"du lieu"))
         for index, name in enumerate(RawEnvelope._fields):
@@ -73,19 +79,53 @@ class RoundTripTests(unittest.TestCase):
                 message = build_signature_input(*changed[:4])
                 self.assertFalse(verify_signature(message, changed[4], SIGN_N))
 
+    @pytest.mark.case("R02")
     def test_outer_json_reformatting_stays_valid(self):
         blob = send(b"abc")
         pretty = json.dumps(dict(reversed(list(json.loads(blob).items()))), indent=4)
         self.assertNotEqual(pretty.encode(), blob)
         self.assertEqual(receive(pretty.encode()), ("báo cáo.txt", b"abc"))
 
+    @pytest.mark.case("A06")
     def test_wrong_recipient_cannot_open(self):
         parts = parse_envelope(send(b"bi mat"))
         with self.assertRaises(ValueError):
             unwrap_key(parts.wrapped_key, SIGN_N, SIGN_D)
 
 
+class ForgeryTests(unittest.TestCase):
+    @pytest.mark.case("A04")
+    def test_other_signing_key_cannot_pass_as_the_pinned_sender(self):
+        # Mallory builds a package for Bob and signs it with her own key. The header
+        # names Alice's fingerprint, but verification uses Alice's pinned key only.
+        # (N, D) stands in for Mallory's key: it differs from Alice's (SIGN_N, SIGN_D).
+        alice_package = parse_envelope(send(b"real"))
+        message = build_signature_input(alice_package.header_raw, alice_package.wrapped_key,
+                                        alice_package.nonce, alice_package.ciphertext)
+        forged = sign_package(message, N, D)
+        self.assertTrue(verify_signature(message, forged, N))
+        self.assertFalse(verify_signature(message, forged, SIGN_N))
+
+    @pytest.mark.case("A05")
+    def test_fields_from_two_valid_packages_cannot_be_mixed(self):
+        first, second = parse_envelope(send(b"one")), parse_envelope(send(b"two"))
+        for index, name in enumerate(RawEnvelope._fields[:4]):
+            with self.subTest(replaced=name):
+                mixed = list(first)
+                mixed[index] = second[index]
+                message = build_signature_input(*mixed[:4])
+                self.assertFalse(verify_signature(message, first.signature, SIGN_N))
+        # A signature from the second package does not authenticate the first body either.
+        message = build_signature_input(*first[:4])
+        self.assertFalse(verify_signature(message, second.signature, SIGN_N))
+
+
 class SignedBadFixtureTests(unittest.TestCase):
+    @pytest.mark.case("A07")
+    @pytest.mark.case("A09")
+    @pytest.mark.case("A10")
+    @pytest.mark.case("A11")
+    @pytest.mark.case("A12")
     def test_signed_bad_data_reaches_expected_layer(self):
         # Người kiểm thử ký fixture bằng khóa test; không mô phỏng khả năng giả chữ ký.
         header = b"test header"
