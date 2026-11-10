@@ -135,6 +135,7 @@ class SendRequest:
     destination_path: Path = field(repr=False)
     passphrase: bytes = field(repr=False)
     overwrite_confirmed: bool = False
+    expected_recipient_fingerprints: tuple[str, str] | None = None
 
 
 @dataclass(frozen=True, slots=True)

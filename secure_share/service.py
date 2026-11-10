@@ -194,6 +194,11 @@ class FileShareService:
                 or recipient.status is not TrustStatus.VERIFIED
             ):
                 raise ShareError(ErrorCode.UNTRUSTED_RECIPIENT)
+            confirmed_keys = request.expected_recipient_fingerprints
+            if confirmed_keys is not None and confirmed_keys != (
+                recipient.encryption_fingerprint, recipient.signing_fingerprint
+            ):
+                raise ShareError(ErrorCode.UNTRUSTED_RECIPIENT)
             header = PackageHeader(
                 format=FORMAT_NAME,
                 version=FORMAT_VERSION,

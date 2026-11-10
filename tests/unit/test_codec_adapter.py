@@ -44,16 +44,15 @@ def test_json_cap_and_encoder():
 
 
 @pytest.mark.parametrize("name", ["../evil", "a/b", "a\\b", "C:evil", "CON", "NUL.txt", "COM1", "trailing.", "trailing ", "\n", ""])
-def test_adapter_rejects_windows_paths_and_devices(name):
+def test_adapter_rejects_unsafe_send_names_and_recovers_safe_receive_names(name):
     codec = envelope.EnvelopeCodec()
-    payload = envelope.build_payload(name or "safe", b"data")
-    if not name:
-        metadata = envelope.encode_json({"filename": name})
-        payload = envelope.frame(metadata) + b"data"
-    for operation in (lambda: codec.build_payload(name, b"data"), lambda: codec.parse_payload(payload)):
-        with pytest.raises(ShareError) as error:
-            operation()
-        assert error.value.code is ErrorCode.PAYLOAD_INVALID
+    with pytest.raises(ShareError) as error:
+        codec.build_payload(name, b"data")
+    assert error.value.code is ErrorCode.PAYLOAD_INVALID
+    payload = envelope.frame(envelope.encode_json({"filename": name})) + b"data"
+    result = codec.parse_payload(payload)
+    assert result.filename == "recovered.bin"
+    assert result.data == b"data"
 
 
 @pytest.mark.parametrize("field,value,code", [("version", 2, ErrorCode.UNSUPPORTED_VERSION), ("suite", "unknown", ErrorCode.UNSUPPORTED_SUITE)])

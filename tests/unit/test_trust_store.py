@@ -113,6 +113,27 @@ def test_disabled_contact_cannot_be_verified_or_resolved(store, bundles):
     assert store.list_contacts('alice')[0].status is TrustStatus.DISABLED
 
 
+@pytest.mark.case("L02")
+def test_disabled_role_keys_stay_blocked_under_aliases_and_after_restart(store, bundles):
+    original = verify(store, store.import_contact('alice', 'bob', bundles[0]))
+    alias = verify(store, store.import_contact('alice', 'bob-copy', bundles[0]))
+    store.disable_contact('alice', 'bob')
+    restarted = TrustStore(store.root.parent, store.keys)
+    assert {contact.status for contact in restarted.list_contacts('alice')} == {TrustStatus.DISABLED}
+    with pytest.raises(ShareError) as error:
+        restarted.resolve_sender('alice', original.signing_fingerprint)
+    assert error.value.code is ErrorCode.UNTRUSTED_SENDER
+    with pytest.raises(ShareError):
+        restarted.resolve_recipient('alice', alias.contact_id)
+    with pytest.raises(ShareError):
+        verify(restarted, alias)
+    with pytest.raises(ShareError):
+        restarted.import_contact('alice', original.contact_id, bundles[1], replace=True)
+    unrelated_profile = restarted.import_contact('carol', 'bob', bundles[0])
+    restarted.verify_contact('carol', 'bob', unrelated_profile.encryption_fingerprint, unrelated_profile.signing_fingerprint)
+    assert restarted.resolve_sender('carol', original.signing_fingerprint).contact_id == 'bob'
+
+
 @pytest.mark.parametrize('operation', ['replace', 'verify', 'disable'])
 def test_failed_write_preserves_pin_after_restart(store, bundles, monkeypatch, operation):
     contact = store.import_contact('alice', 'bob', bundles[0])
