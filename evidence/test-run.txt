@@ -1,0 +1,75 @@
+........................................................................ [ 16%]
+........................................................... [ 29%]
+.................................................................. [ 44%]
+........................................ [ 53%]
+................. [ 57%]
+............................................................ [ 71%]
+........................................................................ [ 87%]
+.......................................................                  [100%]
+441 passed, 190 subtests passed in 92.99s (0:01:32)
+| ID | Linked tests | Actual outcomes | Test names |
+|---|---|---|---|
+| I01 | 1 | passed | KeyStoreTests::test_generated_keys_are_distinct_encrypted_rsa3072 |
+| I02 | 5 | passed | KeyStoreTests::test_invalid_creation_inputs_do_not_write; test_bad_creation_password_leaves_no_profile |
+| I03 | 1 | passed | KeyStoreTests::test_rotation_preserves_old_keys_across_restart_and_restore |
+| I04 | 1 | passed | test_correct_fingerprints_verify_and_make_the_contact_usable |
+| I05 | 6 | passed | test_wrong_fingerprint_does_not_verify |
+| I06 | 2 | passed | test_changed_pair_requires_replacement_and_reverification; test_key_replacement_requires_new_verification |
+| I07 | 3 | passed | KeyStoreTests::test_wrong_password_does_not_change_profile; ServiceTests::test_bad_passphrase_is_a_safe_failure; test_wrong_recipient_or_password |
+| I08 | 1 | passed | KeyStoreTests::test_incomplete_private_pem_is_rejected |
+| I09 | 7 | passed | KeyStoreTests::test_public_key_boundary_rejects_wrong_parameters_and_private_pem; test_invalid_public_bundles_are_never_imported |
+| I10 | 8 | passed | KeyStoreTests::test_wrong_role_and_duplicate_keys_are_rejected; test_invalid_public_bundles_are_never_imported; test_swapped_role_fingerprints_do_not_verify |
+| S01 | 3 | passed | RoundTripTests::test_send_receive; ServiceTests::test_empty_file_round_trip; test_real_disk_roundtrip |
+| S02 | 6 | passed | test_file_formats_roundtrip_as_opaque_bytes |
+| S03 | 5 | passed | test_real_disk_roundtrip |
+| S04 | 4 | passed | ServiceTests::test_input_cap_is_defended_even_if_storage_breaks_contract; test_one_byte_below_file_cap_roundtrips; test_oversized_file_never_creates_package; test_real_disk_roundtrip |
+| S05 | 3 | passed | test_source_failure_creates_no_package |
+| S06 | 2 | passed | ServiceTests::test_send_requires_trusted_recipient_in_same_profile; test_unverified_and_disabled_contacts_are_not_usable |
+| S07 | 2 | passed | test_signing_key_must_exist_and_match_profile |
+| S08 | 2 | passed | RoundTripTests::test_same_file_sent_twice_gives_different_packages; test_repeated_send_uses_fresh_randomness |
+| S09 | 1 | passed | ServiceTests::test_send_stops_if_confirmed_recipient_keys_changed |
+| R01 | 7 | passed | RoundTripTests::test_send_receive; test_real_disk_roundtrip; test_threshold_tab_create_contribute_and_receive |
+| R02 | 3 | passed | EnvelopeTests::test_outer_json_may_be_reformatted; RoundTripTests::test_outer_json_reformatting_stays_valid; test_outer_formatting_and_package_filename_do_not_change_signature |
+| R03 | 1 | passed | test_outer_formatting_and_package_filename_do_not_change_signature |
+| R04 | 4 | passed | test_authenticated_unsafe_filename_gets_safe_save_suggestion |
+| R05 | 10 | passed | test_authenticated_unsafe_filename_gets_safe_save_suggestion |
+| R06 | 2 | passed | test_protected_path_and_retry_after_failed_save; test_refusing_overwrite_opens_save_as_again_with_same_handle |
+| R07 | 2 | passed | ServiceTests::test_discard_writes_nothing_and_invalidates_handle; test_cancel_prepared_does_not_write_plaintext |
+| A01 | 3 | passed | ServiceTests::test_untrusted_sender_stops_before_verify; test_disabled_contact_cannot_be_verified_or_resolved; test_untrusted_sender_is_rejected_before_password |
+| A02 | 4 | passed | RoundTripTests::test_tampering_any_part_breaks_signature; ServiceTests::test_signature_failure_stops_before_private_key_unlock; test_each_authenticated_component_rejects_tampering; test_unsigned_changes_stop_at_the_signature |
+| A03 | 6 | passed | RoundTripTests::test_tampering_any_part_breaks_signature; test_each_authenticated_component_rejects_tampering; test_unsigned_changes_stop_at_the_signature |
+| A04 | 1 | passed | ForgeryTests::test_other_signing_key_cannot_pass_as_the_pinned_sender |
+| A05 | 2 | passed | ForgeryTests::test_fields_from_two_valid_packages_cannot_be_mixed; test_unsigned_changes_stop_at_the_signature |
+| A06 | 3 | passed | RoundTripTests::test_wrong_recipient_cannot_open; ServiceTests::test_wrong_recipient_stops_before_unwrap; test_wrong_recipient_or_password |
+| A07 | 4 | passed | ServiceTests::test_unwrap_failure_has_no_prepared_plaintext; SignedBadFixtureTests::test_signed_bad_data_reaches_expected_layer; test_deep_faults_reach_the_inner_layer_not_the_signature; test_signed_but_invalid_crypto_is_rejected |
+| A08 | 3 | passed | CryptoTests::test_oaep_rejects_wrong_key_length_after_decode; ServiceTests::test_unwrapped_aes_key_length_is_checked; test_deep_faults_reach_the_inner_layer_not_the_signature |
+| A09 | 4 | passed | ServiceTests::test_gcm_failure_stops_before_payload_and_save; SignedBadFixtureTests::test_signed_bad_data_reaches_expected_layer; test_deep_faults_reach_the_inner_layer_not_the_signature; test_signed_but_invalid_crypto_is_rejected |
+| A10 | 2 | passed | SignedBadFixtureTests::test_signed_bad_data_reaches_expected_layer; test_deep_faults_reach_the_inner_layer_not_the_signature |
+| A11 | 7 | passed | PayloadTests::test_invalid_framing; SignedBadFixtureTests::test_signed_bad_data_reaches_expected_layer; test_deep_faults_reach_the_inner_layer_not_the_signature; test_payload_framing_errors |
+| A12 | 4 | passed | PayloadTests::test_invalid_metadata; ServiceTests::test_oversized_decrypted_file_is_rejected; SignedBadFixtureTests::test_signed_bad_data_reaches_expected_layer; test_deep_faults_reach_the_inner_layer_not_the_signature |
+| P01 | 9 | passed | EnvelopeTests::test_not_json; test_malformed_envelopes |
+| P02 | 1 | passed | EnvelopeTests::test_wrong_fields |
+| P03 | 1 | passed | EnvelopeTests::test_bad_base64 |
+| P04 | 1 | passed | HeaderTests::test_rejected |
+| P05 | 2 | passed | HeaderTests::test_rejected; HeaderTests::test_size_limit |
+| P06 | 1 | passed | EnvelopeTests::test_block_lengths |
+| P07 | 1 | passed | EnvelopeTests::test_outer_cap |
+| P08 | 3 | passed | test_executable_looking_content_is_saved_as_plain_bytes |
+| O01 | 2 | passed | test_cancel_receive_confirmation_or_save_dialog_discards_handle |
+| O02 | 2 | passed | test_hardlink_alias_to_private_key_is_protected; test_protected_path_and_retry_after_failed_save |
+| O03 | 2 | passed | test_protected_path_and_retry_after_failed_save; test_storage_no_clobber_race |
+| O04 | 2 | passed | test_unavailable_destination_allows_retry_elsewhere |
+| O05 | 3 | passed | test_partial_write_preserves_destination_and_cleans_temp; test_storage_failure_preserves_existing_file |
+| O06 | 2 | passed | ServiceTests::test_prepared_operation_blocks_new_work; ServiceTests::test_real_concurrent_call_returns_busy |
+| O07 | 3 | passed | test_runtime_artifacts_keep_secrets_out_of_ui_and_logs |
+| O08 | 4 | passed | test_restart_clears_leftover_marker_without_touching_committed_output; test_restart_only_removes_its_own_interrupted_save |
+| L01 | 2 | passed | KeyStoreTests::test_rotation_preserves_old_keys_across_restart_and_restore; test_rotation_retains_old_decryption_keys |
+| L02 | 3 | passed | test_disabled_contact_cannot_be_verified_or_resolved; test_disabled_role_keys_stay_blocked_under_aliases_and_after_restart; test_unverified_and_disabled_contacts_are_not_usable |
+| L03 | 1 | passed | test_backup_restore_validates_password_and_keeps_fingerprints |
+| L04 | 1 | passed | ServiceTests::test_duplicate_warns_but_allows_deliberate_reopen |
+| L05 | 1 | passed | test_authorized_plaintext_can_be_forwarded |
+| L06 | 3 | passed | test_copied_recipient_key_can_open_an_old_package; test_copied_signing_key_still_matches_bobs_pin; test_wrong_verified_fingerprint_controls_the_recipient |
+
+60/60 IDs have at least one linked test.
+60/60 IDs had every linked automated test pass in this run.
+Automated evidence is separate from independent review and manual acceptance.

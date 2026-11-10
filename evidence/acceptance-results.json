@@ -1,0 +1,4236 @@
+{
+  "schema_version": 1,
+  "mode": "automated_run",
+  "metadata": {
+    "started_at_utc": "2026-11-10T11:27:34.386561+00:00",
+    "os": "Windows",
+    "os_release": "11",
+    "python": "3.14.8",
+    "pytest": "9.2.0",
+    "commit": "a6106d1d4d5869d87aafa3af79acd4597066d607",
+    "working_tree_dirty": true,
+    "runner": "local",
+    "github_run_id": null,
+    "github_run_attempt": null
+  },
+  "pytest_exit_code": 0,
+  "missing_case_ids": [],
+  "nonpassing_case_ids": [],
+  "invalid_markers": [],
+  "cases": {
+    "I01": [
+      {
+        "test": "tests/unit/test_key_store.py::KeyStoreTests::test_generated_keys_are_distinct_encrypted_rsa3072",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000201
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.211427
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000143
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "I02": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_bad_creation_password_leaves_no_profile[]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.00728
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000563
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000145
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_bad_creation_password_leaves_no_profile[short]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.007393
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000593
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000156
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_bad_creation_password_leaves_no_profile[\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xff\\xff]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.007072
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000574
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000153
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_bad_creation_password_leaves_no_profile[password3]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.007649
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.00059
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000149
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_key_store.py::KeyStoreTests::test_invalid_creation_inputs_do_not_write",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000295
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.00482
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000134
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "I03": [
+      {
+        "test": "tests/unit/test_key_store.py::KeyStoreTests::test_rotation_preserves_old_keys_across_restart_and_restore",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000283
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 1.348736
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000153
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "I04": [
+      {
+        "test": "tests/unit/test_trust_store.py::test_correct_fingerprints_verify_and_make_the_contact_usable",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.001422
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.065744
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000163
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "I05": [
+      {
+        "test": "tests/unit/test_trust_store.py::test_wrong_fingerprint_does_not_verify[encryption-None]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.001864
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.040765
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.00018
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_trust_store.py::test_wrong_fingerprint_does_not_verify[encryption-0000000000000000000000000000000000000000000000000000000000000000]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.001555
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.038125
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000174
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_trust_store.py::test_wrong_fingerprint_does_not_verify[encryption-\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.002028
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.037531
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000218
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_trust_store.py::test_wrong_fingerprint_does_not_verify[signing-None]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.001846
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.037616
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000176
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_trust_store.py::test_wrong_fingerprint_does_not_verify[signing-0000000000000000000000000000000000000000000000000000000000000000]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.001666
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.038543
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000214
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_trust_store.py::test_wrong_fingerprint_does_not_verify[signing-\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9\\xe9]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.001723
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.03701
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000176
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "I06": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_key_replacement_requires_new_verification",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.007429
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.094664
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000179
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_trust_store.py::test_changed_pair_requires_replacement_and_reverification",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.002462
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.145389
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000163
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "I07": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_wrong_recipient_or_password[wrong-passphrase]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.012543
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.251426
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000192
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_key_store.py::KeyStoreTests::test_wrong_password_does_not_change_profile",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000218
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.015041
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000135
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_service.py::ServiceTests::test_bad_passphrase_is_a_safe_failure",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000185
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.00236
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000118
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "I08": [
+      {
+        "test": "tests/unit/test_key_store.py::KeyStoreTests::test_incomplete_private_pem_is_rejected",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000188
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.011069
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000175
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "I09": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_invalid_public_bundles_are_never_imported[same_key]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.006842
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.007989
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000162
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_invalid_public_bundles_are_never_imported[small_rsa]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.007776
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.070324
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000192
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_invalid_public_bundles_are_never_imported[ec_key]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008321
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.005204
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000175
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_invalid_public_bundles_are_never_imported[garbage]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.011741
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.004719
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000172
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_invalid_public_bundles_are_never_imported[duplicate_json]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008503
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.004857
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000167
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_invalid_public_bundles_are_never_imported[extra_field]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.014083
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.004776
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000163
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_key_store.py::KeyStoreTests::test_public_key_boundary_rejects_wrong_parameters_and_private_pem",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000195
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.029833
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000182
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "I10": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_invalid_public_bundles_are_never_imported[same_key]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.006842
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.007989
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000162
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_invalid_public_bundles_are_never_imported[small_rsa]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.007776
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.070324
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000192
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_invalid_public_bundles_are_never_imported[ec_key]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008321
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.005204
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000175
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_invalid_public_bundles_are_never_imported[garbage]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.011741
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.004719
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000172
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_invalid_public_bundles_are_never_imported[duplicate_json]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008503
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.004857
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000167
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_invalid_public_bundles_are_never_imported[extra_field]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.014083
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.004776
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000163
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_key_store.py::KeyStoreTests::test_wrong_role_and_duplicate_keys_are_rejected",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000214
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.027983
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000221
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_trust_store.py::test_swapped_role_fingerprints_do_not_verify",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.001767
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.04031
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000275
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "S01": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_real_disk_roundtrip[empty]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 1.314292
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.552057
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.00017
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_round_trip.py::RoundTripTests::test_send_receive",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000384
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.842286
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000137
+          }
+        },
+        "subtests": [
+          {
+            "index": 1,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 2,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 3,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 4,
+            "outcome": "passed",
+            "seconds": 0
+          }
+        ]
+      },
+      {
+        "test": "tests/unit/test_service.py::ServiceTests::test_empty_file_round_trip",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000196
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.00299
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000188
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "S02": [
+      {
+        "test": "tests/integration/test_acceptance.py::test_file_formats_roundtrip_as_opaque_bytes[vietnamese-txt]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 2.027132
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.336923
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000229
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_acceptance.py::test_file_formats_roundtrip_as_opaque_bytes[pdf]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.01015
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.334426
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000187
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_acceptance.py::test_file_formats_roundtrip_as_opaque_bytes[png]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.007671
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.334273
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000168
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_acceptance.py::test_file_formats_roundtrip_as_opaque_bytes[docx]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008474
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.369529
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000208
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_acceptance.py::test_file_formats_roundtrip_as_opaque_bytes[zip]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.007741
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.382146
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000253
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_acceptance.py::test_file_formats_roundtrip_as_opaque_bytes[random-binary]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.009072
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.344813
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000252
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "S03": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_real_disk_roundtrip[empty]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 1.314292
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.552057
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.00017
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_real_disk_roundtrip[one-byte]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.011248
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.523634
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000175
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_real_disk_roundtrip[unicode-text]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.012898
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.528723
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000248
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_real_disk_roundtrip[binary-2560-bytes]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.012281
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.987496
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000214
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_real_disk_roundtrip[max-10MiB]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.014833
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 1.233766
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000326
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "S04": [
+      {
+        "test": "tests/integration/test_acceptance.py::test_one_byte_below_file_cap_roundtrips",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.014511
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.741876
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000161
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_real_disk_roundtrip[max-10MiB]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.014833
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 1.233766
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000326
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_oversized_file_never_creates_package",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.00751
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.028012
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000187
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_service.py::ServiceTests::test_input_cap_is_defended_even_if_storage_breaks_contract",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000197
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.003077
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.0017
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "S05": [
+      {
+        "test": "tests/integration/test_acceptance.py::test_source_failure_creates_no_package[vanished]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.009834
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.001146
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000166
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_acceptance.py::test_source_failure_creates_no_package[read-error]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.00709
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.001989
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000231
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_acceptance.py::test_source_failure_creates_no_package[grew-past-cap]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.007739
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.020724
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000187
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "S06": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_unverified_and_disabled_contacts_are_not_usable",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008307
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.242495
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000157
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_service.py::ServiceTests::test_send_requires_trusted_recipient_in_same_profile",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000338
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.00915
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000297
+          }
+        },
+        "subtests": [
+          {
+            "index": 1,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 2,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 3,
+            "outcome": "passed",
+            "seconds": 0
+          }
+        ]
+      }
+    ],
+    "S07": [
+      {
+        "test": "tests/integration/test_acceptance.py::test_signing_key_must_exist_and_match_profile[missing-private-pem-PROFILE_INVALID]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.009703
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.020237
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000177
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_acceptance.py::test_signing_key_must_exist_and_match_profile[mismatched-private-pem-KEY_UNLOCK_FAILED]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.007657
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.153806
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000197
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "S08": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_repeated_send_uses_fresh_randomness",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.007859
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.340402
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000164
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_round_trip.py::RoundTripTests::test_same_file_sent_twice_gives_different_packages",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000176
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.401035
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000327
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "S09": [
+      {
+        "test": "tests/unit/test_service.py::ServiceTests::test_send_stops_if_confirmed_recipient_keys_changed",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000364
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.002659
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000246
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "R01": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_real_disk_roundtrip[empty]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 1.314292
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.552057
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.00017
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_real_disk_roundtrip[one-byte]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.011248
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.523634
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000175
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_real_disk_roundtrip[unicode-text]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.012898
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.528723
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000248
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_real_disk_roundtrip[binary-2560-bytes]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.012281
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.987496
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000214
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_real_disk_roundtrip[max-10MiB]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.014833
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 1.233766
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000326
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_round_trip.py::RoundTripTests::test_send_receive",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000384
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.842286
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000137
+          }
+        },
+        "subtests": [
+          {
+            "index": 1,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 2,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 3,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 4,
+            "outcome": "passed",
+            "seconds": 0
+          }
+        ]
+      },
+      {
+        "test": "tests/integration/test_threshold_tk.py::test_threshold_tab_create_contribute_and_receive",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.001989
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 5.561299
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.029621
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "R02": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_outer_formatting_and_package_filename_do_not_change_signature",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008875
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.351526
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000183
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_round_trip.py::RoundTripTests::test_outer_json_reformatting_stays_valid",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.00025
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.156808
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000134
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_envelope.py::EnvelopeTests::test_outer_json_may_be_reformatted",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000174
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000238
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 9.9e-05
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "R03": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_outer_formatting_and_package_filename_do_not_change_signature",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008875
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.351526
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000183
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "R04": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_authenticated_unsafe_filename_gets_safe_save_suggestion[../outside]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008065
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.553537
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000173
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_authenticated_unsafe_filename_gets_safe_save_suggestion[..\\\\outside]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.009415
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.564863
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000193
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_authenticated_unsafe_filename_gets_safe_save_suggestion[C:\\\\outside]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.009095
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.582666
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.00017
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_authenticated_unsafe_filename_gets_safe_save_suggestion[file:stream]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008441
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.567705
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000161
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "R05": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_authenticated_unsafe_filename_gets_safe_save_suggestion[CON]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.007636
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.569877
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000384
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_authenticated_unsafe_filename_gets_safe_save_suggestion[NUL.txt]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.010679
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.579465
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000248
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_authenticated_unsafe_filename_gets_safe_save_suggestion[COM1]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008375
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.926912
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000418
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_authenticated_unsafe_filename_gets_safe_save_suggestion[COM\\xb9.txt]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.065177
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.673911
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000372
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_authenticated_unsafe_filename_gets_safe_save_suggestion[trailing.]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.009958
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.557093
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000185
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_authenticated_unsafe_filename_gets_safe_save_suggestion[trailing ]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008757
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.544226
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000166
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_authenticated_unsafe_filename_gets_safe_save_suggestion[\\x00]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.00823
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.539204
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000189
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_authenticated_unsafe_filename_gets_safe_save_suggestion[\\n]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.007826
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.535593
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000166
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_authenticated_unsafe_filename_gets_safe_save_suggestion[]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008613
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.557989
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000293
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_authenticated_unsafe_filename_gets_safe_save_suggestion[name13]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.010691
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.570735
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000172
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "R06": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_protected_path_and_retry_after_failed_save",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008434
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.34549
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000278
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_ui_workflows.py::test_refusing_overwrite_opens_save_as_again_with_same_handle",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.00113
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.004461
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000238
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "R07": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_cancel_prepared_does_not_write_plaintext",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008594
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.307039
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000152
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_service.py::ServiceTests::test_discard_writes_nothing_and_invalidates_handle",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000275
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.002965
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000162
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "A01": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_untrusted_sender_is_rejected_before_password",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.007825
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.229414
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000171
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_service.py::ServiceTests::test_untrusted_sender_stops_before_verify",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.003971
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.004142
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000373
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_trust_store.py::test_disabled_contact_cannot_be_verified_or_resolved",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.001725
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.092479
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000165
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "A02": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_each_authenticated_component_rejects_tampering[signature_b64]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008507
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.221791
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.00023
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_round_trip.py::RoundTripTests::test_tampering_any_part_breaks_signature",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000287
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.108739
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000134
+          }
+        },
+        "subtests": [
+          {
+            "index": 1,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 2,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 3,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 4,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 5,
+            "outcome": "passed",
+            "seconds": 0
+          }
+        ]
+      },
+      {
+        "test": "tests/unit/test_make_fixtures.py::test_unsigned_changes_stop_at_the_signature",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000177
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000117
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000106
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_service.py::ServiceTests::test_signature_failure_stops_before_private_key_unlock",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000364
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.003296
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000289
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "A03": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_each_authenticated_component_rejects_tampering[header_b64]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.018996
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.242856
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000201
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_each_authenticated_component_rejects_tampering[wrapped_key_b64]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008284
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.245669
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000183
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_each_authenticated_component_rejects_tampering[nonce_b64]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.011618
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.233664
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.00018
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_each_authenticated_component_rejects_tampering[ciphertext_b64]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.009215
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.206384
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000181
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_round_trip.py::RoundTripTests::test_tampering_any_part_breaks_signature",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000287
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.108739
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000134
+          }
+        },
+        "subtests": [
+          {
+            "index": 1,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 2,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 3,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 4,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 5,
+            "outcome": "passed",
+            "seconds": 0
+          }
+        ]
+      },
+      {
+        "test": "tests/unit/test_make_fixtures.py::test_unsigned_changes_stop_at_the_signature",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000177
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000117
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000106
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "A04": [
+      {
+        "test": "tests/integration/test_round_trip.py::ForgeryTests::test_other_signing_key_cannot_pass_as_the_pinned_sender",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000195
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.179684
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000207
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "A05": [
+      {
+        "test": "tests/integration/test_round_trip.py::ForgeryTests::test_fields_from_two_valid_packages_cannot_be_mixed",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000502
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.210108
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.00014
+          }
+        },
+        "subtests": [
+          {
+            "index": 1,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 2,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 3,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 4,
+            "outcome": "passed",
+            "seconds": 0
+          }
+        ]
+      },
+      {
+        "test": "tests/unit/test_make_fixtures.py::test_unsigned_changes_stop_at_the_signature",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000177
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000117
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000106
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "A06": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_wrong_recipient_or_password[wrong-recipient]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.01892
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.232175
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000202
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_round_trip.py::RoundTripTests::test_wrong_recipient_cannot_open",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000193
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.328222
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000361
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_service.py::ServiceTests::test_wrong_recipient_stops_before_unwrap",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000297
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.004117
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000379
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "A07": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_signed_but_invalid_crypto_is_rejected[invalid-oaep]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.00844
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.444886
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000203
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_round_trip.py::SignedBadFixtureTests::test_signed_bad_data_reaches_expected_layer",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000254
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.738848
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000205
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_make_fixtures.py::test_deep_faults_reach_the_inner_layer_not_the_signature",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000244
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000142
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000109
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_service.py::ServiceTests::test_unwrap_failure_has_no_prepared_plaintext",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.00037
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.003557
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000204
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "A08": [
+      {
+        "test": "tests/unit/test_crypto_ops.py::CryptoTests::test_oaep_rejects_wrong_key_length_after_decode",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000217
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.309362
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000212
+          }
+        },
+        "subtests": [
+          {
+            "index": 1,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 2,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 3,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 4,
+            "outcome": "passed",
+            "seconds": 0
+          }
+        ]
+      },
+      {
+        "test": "tests/unit/test_make_fixtures.py::test_deep_faults_reach_the_inner_layer_not_the_signature",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000244
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000142
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000109
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_service.py::ServiceTests::test_unwrapped_aes_key_length_is_checked",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000321
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.003606
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000217
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "A09": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_signed_but_invalid_crypto_is_rejected[invalid-gcm-tag]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008255
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.434498
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000473
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_round_trip.py::SignedBadFixtureTests::test_signed_bad_data_reaches_expected_layer",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000254
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.738848
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000205
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_make_fixtures.py::test_deep_faults_reach_the_inner_layer_not_the_signature",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000244
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000142
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000109
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_service.py::ServiceTests::test_gcm_failure_stops_before_payload_and_save",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000201
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.00234
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000125
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "A10": [
+      {
+        "test": "tests/integration/test_round_trip.py::SignedBadFixtureTests::test_signed_bad_data_reaches_expected_layer",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000254
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.738848
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000205
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_make_fixtures.py::test_deep_faults_reach_the_inner_layer_not_the_signature",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000244
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000142
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000109
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "A11": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_payload_framing_errors[]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000492
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000267
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000121
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_payload_framing_errors[\\x00\\x00\\x10\\x01]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000262
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000178
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000109
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_payload_framing_errors[\\x00\\x00\\x00\\n{}]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000172
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000123
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000107
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_payload_framing_errors[\\x00\\x00\\x00\\x02[]]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000165
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000146
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000107
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_round_trip.py::SignedBadFixtureTests::test_signed_bad_data_reaches_expected_layer",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000254
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.738848
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000205
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_envelope.py::PayloadTests::test_invalid_framing",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000196
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.001353
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000124
+          }
+        },
+        "subtests": [
+          {
+            "index": 1,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 2,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 3,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 4,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 5,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 6,
+            "outcome": "passed",
+            "seconds": 0
+          }
+        ]
+      },
+      {
+        "test": "tests/unit/test_make_fixtures.py::test_deep_faults_reach_the_inner_layer_not_the_signature",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000244
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000142
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000109
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "A12": [
+      {
+        "test": "tests/integration/test_round_trip.py::SignedBadFixtureTests::test_signed_bad_data_reaches_expected_layer",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000254
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.738848
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000205
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_envelope.py::PayloadTests::test_invalid_metadata",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000152
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.003824
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000103
+          }
+        },
+        "subtests": [
+          {
+            "index": 1,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 2,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 3,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 4,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 5,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 6,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 7,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 8,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 9,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 10,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 11,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 12,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 13,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 14,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 15,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 16,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 17,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 18,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 19,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 20,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 21,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 22,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 23,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 24,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 25,
+            "outcome": "passed",
+            "seconds": 0
+          }
+        ]
+      },
+      {
+        "test": "tests/unit/test_make_fixtures.py::test_deep_faults_reach_the_inner_layer_not_the_signature",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000244
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000142
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000109
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_service.py::ServiceTests::test_oversized_decrypted_file_is_rejected",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000183
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.009293
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.001003
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "P01": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_malformed_envelopes[{}]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000208
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000159
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.00014
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_malformed_envelopes[[]]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000174
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000137
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000111
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_malformed_envelopes[null]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000173
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000187
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000126
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_malformed_envelopes[{]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000236
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000257
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000145
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_malformed_envelopes[\\xff]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000201
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000146
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000123
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_malformed_envelopes[{\"a\":1,\"a\":2}]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000222
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000722
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000324
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_malformed_envelopes[{\"a\":NaN}]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000331
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000256
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000137
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_malformed_envelopes[data7]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.00033
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000697
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000362
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_envelope.py::EnvelopeTests::test_not_json",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000162
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.001761
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000118
+          }
+        },
+        "subtests": [
+          {
+            "index": 1,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 2,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 3,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 4,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 5,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 6,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 7,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 8,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 9,
+            "outcome": "passed",
+            "seconds": 0
+          }
+        ]
+      }
+    ],
+    "P02": [
+      {
+        "test": "tests/unit/test_envelope.py::EnvelopeTests::test_wrong_fields",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000142
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000283
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000157
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "P03": [
+      {
+        "test": "tests/unit/test_envelope.py::EnvelopeTests::test_bad_base64",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000219
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.001474
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000113
+          }
+        },
+        "subtests": [
+          {
+            "index": 1,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 2,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 3,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 4,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 5,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 6,
+            "outcome": "passed",
+            "seconds": 0
+          }
+        ]
+      }
+    ],
+    "P04": [
+      {
+        "test": "tests/unit/test_envelope.py::HeaderTests::test_rejected",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000207
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.002787
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000209
+          }
+        },
+        "subtests": [
+          {
+            "index": 1,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 2,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 3,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 4,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 5,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 6,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 7,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 8,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 9,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 10,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 11,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 12,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 13,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 14,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 15,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 16,
+            "outcome": "passed",
+            "seconds": 0
+          }
+        ]
+      }
+    ],
+    "P05": [
+      {
+        "test": "tests/unit/test_envelope.py::HeaderTests::test_rejected",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000207
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.002787
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000209
+          }
+        },
+        "subtests": [
+          {
+            "index": 1,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 2,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 3,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 4,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 5,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 6,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 7,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 8,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 9,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 10,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 11,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 12,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 13,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 14,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 15,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 16,
+            "outcome": "passed",
+            "seconds": 0
+          }
+        ]
+      },
+      {
+        "test": "tests/unit/test_envelope.py::HeaderTests::test_size_limit",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000161
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000197
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 9.9e-05
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "P06": [
+      {
+        "test": "tests/unit/test_envelope.py::EnvelopeTests::test_block_lengths",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.00018
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.078828
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000167
+          }
+        },
+        "subtests": [
+          {
+            "index": 1,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 2,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 3,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 4,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 5,
+            "outcome": "passed",
+            "seconds": 0
+          },
+          {
+            "index": 6,
+            "outcome": "passed",
+            "seconds": 0
+          }
+        ]
+      }
+    ],
+    "P07": [
+      {
+        "test": "tests/unit/test_envelope.py::EnvelopeTests::test_outer_cap",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000149
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.043432
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.00013
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "P08": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_executable_looking_content_is_saved_as_plain_bytes[zip-archive]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.00791
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.383144
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000414
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_executable_looking_content_is_saved_as_plain_bytes[batch-script]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.023255
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.381365
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000216
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_executable_looking_content_is_saved_as_plain_bytes[executable-header]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008507
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.325157
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000242
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "O01": [
+      {
+        "test": "tests/unit/test_ui_workflows.py::test_cancel_receive_confirmation_or_save_dialog_discards_handle[False]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000335
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000324
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000145
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_ui_workflows.py::test_cancel_receive_confirmation_or_save_dialog_discards_handle[True]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000323
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.000371
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000143
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "O02": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_protected_path_and_retry_after_failed_save",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008434
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.34549
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000278
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_hardlink_alias_to_private_key_is_protected",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.007568
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.007261
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000157
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "O03": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_protected_path_and_retry_after_failed_save",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008434
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.34549
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000278
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_desktop_app.py::test_storage_no_clobber_race",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.001104
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.004573
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000155
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "O04": [
+      {
+        "test": "tests/unit/test_storage.py::test_unavailable_destination_allows_retry_elsewhere[missing]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.013004
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.01393
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000201
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_storage.py::test_unavailable_destination_allows_retry_elsewhere[permission]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.001779
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.012962
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000203
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "O05": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_storage_failure_preserves_existing_file",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.001015
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.003879
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000174
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_storage.py::test_partial_write_preserves_destination_and_cleans_temp[False]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.001364
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.008255
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000209
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_storage.py::test_partial_write_preserves_destination_and_cleans_temp[True]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.001558
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.007223
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000369
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "O06": [
+      {
+        "test": "tests/unit/test_service.py::ServiceTests::test_prepared_operation_blocks_new_work",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000197
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.003617
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000202
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_service.py::ServiceTests::test_real_concurrent_call_returns_busy",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000194
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.003367
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000192
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "O07": [
+      {
+        "test": "tests/integration/test_acceptance.py::test_runtime_artifacts_keep_secrets_out_of_ui_and_logs[success]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.009348
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.365748
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000242
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_acceptance.py::test_runtime_artifacts_keep_secrets_out_of_ui_and_logs[receive-error]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008149
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.387499
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000276
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_acceptance.py::test_runtime_artifacts_keep_secrets_out_of_ui_and_logs[save-error]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.009947
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.362685
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000317
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "O08": [
+      {
+        "test": "tests/unit/test_storage.py::test_restart_only_removes_its_own_interrupted_save[new]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.002497
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.36882
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000407
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_storage.py::test_restart_only_removes_its_own_interrupted_save[overwrite]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.001656
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.547522
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000204
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_storage.py::test_restart_only_removes_its_own_interrupted_save[replaced_temporary]",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.001561
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.338042
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.00032
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_storage.py::test_restart_clears_leftover_marker_without_touching_committed_output",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.00174
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.025137
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000219
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "L01": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_rotation_retains_old_decryption_keys",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008468
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.755836
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000163
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_key_store.py::KeyStoreTests::test_rotation_preserves_old_keys_across_restart_and_restore",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000283
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 1.348736
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000153
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "L02": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_unverified_and_disabled_contacts_are_not_usable",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.008307
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.242495
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000157
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_trust_store.py::test_disabled_contact_cannot_be_verified_or_resolved",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.001725
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.092479
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000165
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/unit/test_trust_store.py::test_disabled_role_keys_stay_blocked_under_aliases_and_after_restart",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.001746
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.253073
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000177
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "L03": [
+      {
+        "test": "tests/integration/test_desktop_app.py::test_backup_restore_validates_password_and_keeps_fingerprints",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.007291
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.667072
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000156
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "L04": [
+      {
+        "test": "tests/unit/test_service.py::ServiceTests::test_duplicate_warns_but_allows_deliberate_reopen",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.000209
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.004698
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000165
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "L05": [
+      {
+        "test": "tests/integration/test_acceptance.py::test_authorized_plaintext_can_be_forwarded",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.00974
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.430878
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000254
+          }
+        },
+        "subtests": []
+      }
+    ],
+    "L06": [
+      {
+        "test": "tests/integration/test_acceptance.py::test_wrong_verified_fingerprint_controls_the_recipient",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.016988
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.554641
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000201
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_acceptance.py::test_copied_recipient_key_can_open_an_old_package",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.00929
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 0.9041
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000169
+          }
+        },
+        "subtests": []
+      },
+      {
+        "test": "tests/integration/test_acceptance.py::test_copied_signing_key_still_matches_bobs_pin",
+        "outcome": "passed",
+        "phases": {
+          "setup": {
+            "outcome": "passed",
+            "seconds": 0.010808
+          },
+          "call": {
+            "outcome": "passed",
+            "seconds": 1.15757
+          },
+          "teardown": {
+            "outcome": "passed",
+            "seconds": 0.000229
+          }
+        },
+        "subtests": []
+      }
+    ]
+  }
+}

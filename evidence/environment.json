@@ -1,0 +1,13 @@
+{
+  "project": "Shared-Files-Security",
+  "version": "0.1.0",
+  "python_version": "3.14.8",
+  "python_supported": true,
+  "cryptography_available": true,
+  "cryptography_version": "50.0.2",
+  "cryptography_error": null,
+  "environment_ready": true,
+  "integration_modules_present": true,
+  "missing_integration_modules": [],
+  "integration_note": "Module presence is a wiring check, not proof of working encryption or a passing release."
+}
