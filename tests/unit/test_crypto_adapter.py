@@ -4,6 +4,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
+from secure_share import crypto_ops
 from secure_share.crypto_ops import CryptoOps
 from secure_share.errors import ErrorCode, ShareError
 
@@ -26,6 +27,19 @@ def test_crypto_adapter_interoperates_with_reference(private_key):
     signature = crypto.sign_package(b'message', private_key)
     private_key.public_key().verify(signature, b'message', pss, hashes.SHA256())
     assert crypto.verify_signature(private_key.sign(b'message', pss, hashes.SHA256()), b'message', private_key.public_key()) is None
+
+
+def test_app_reads_existing_python_backend_packets(private_key):
+    crypto = CryptoOps()
+    numbers = private_key.private_numbers()
+    n, e = numbers.public_numbers.n, numbers.public_numbers.e
+    key, nonce = crypto.generate_aes_key(), crypto.generate_nonce()
+    wrapped = crypto_ops.wrap_key(key, n, e)
+    ciphertext = crypto_ops.encrypt_payload(b'old package contents', key, nonce, b'header')
+    signature = crypto_ops.sign_package(ciphertext, n, numbers.d)
+    assert crypto.verify_signature(signature, ciphertext, private_key.public_key()) is None
+    assert crypto.unwrap_key(wrapped, private_key) == key
+    assert crypto.decrypt_payload(key, nonce, ciphertext, b'header') == b'old package contents'
 
 
 def test_crypto_adapter_rejects_invalid_data(private_key):

@@ -1,6 +1,8 @@
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import queue
+import secrets
+import sys
 import tkinter as tk
 from tkinter import filedialog, messagebox, simpledialog, ttk
 
@@ -18,6 +20,7 @@ class App:
         self.busy = False
         self.closed = False
         self.buttons = []
+        self.recipient_profile = None
         self.profile = tk.StringVar()
         self.contact = tk.StringVar()
         self.status = tk.StringVar(value='Tạo hồ sơ, trao đổi khóa công khai và xác minh trước khi gửi tệp.')
@@ -34,7 +37,7 @@ class App:
         ttk.Label(line, text='Hồ sơ đang dùng').pack(side='left', padx=(0, 12))
         self.profiles = ttk.Combobox(line, textvariable=self.profile, state='readonly', width=30)
         self.profiles.pack(side='left')
-        self.profiles.bind('<<ComboboxSelected>>', lambda event: self.refresh_contacts())
+        self.profiles.bind('<<ComboboxSelected>>', lambda event: self.perform(self.refresh_contacts))
         self.button(line, 'Tạo hồ sơ', self.create_profile).pack(side='left', padx=8)
         tabs = ttk.Notebook(outer)
         tabs.pack(fill='both', expand=True, pady=18)
@@ -59,7 +62,7 @@ class App:
         contact_actions.pack(fill='x')
         for label, action in [('Nhập khóa', self.import_contact), ('Xem dấu vân tay', self.show_contact), ('Xác minh', self.verify_contact), ('Vô hiệu hóa', self.disable_contact)]:
             self.button(contact_actions, label, action).pack(side='left', padx=(0, 8))
-        ttk.Label(files_tab, text='Người nhận đã xác minh').pack(anchor='w')
+        ttk.Label(files_tab, text='Chọn người nhận đã xác minh').pack(anchor='w')
         self.recipients = ttk.Combobox(files_tab, textvariable=self.contact, state='readonly', width=45)
         self.recipients.pack(anchor='w', pady=10)
         self.button(files_tab, 'Chọn tệp và mã hóa để gửi', self.send).pack(anchor='w', pady=12)
@@ -73,16 +76,27 @@ class App:
         self.root.after(80, self.poll)
 
     def button(self, parent, text, command):
-        def guarded():
-            try:
-                command()
-            except ShareError as exc:
-                messagebox.showerror('Không hoàn tất', exc.message, parent=self.root)
-            except Exception:
-                messagebox.showerror('Không hoàn tất', safe_message(ErrorCode.INTERNAL_ERROR), parent=self.root)
-        button = ttk.Button(parent, text=text, command=guarded)
+        button = ttk.Button(parent, text=text, command=lambda: self.perform(command))
         self.buttons.append(button)
         return button
+
+    def perform(self, command):
+        if self.busy or self.closed:
+            return
+        try:
+            command()
+        except ShareError as exc:
+            self.show_error(exc.code)
+        except Exception:
+            self.show_error(ErrorCode.INTERNAL_ERROR)
+
+    def show_error(self, code):
+        self.status.set('Không hoàn tất thao tác.')
+        messagebox.showerror(
+            'Không hoàn tất', f'{safe_message(code)}\nMã lỗi: {code.value}', parent=self.root)
+
+    def cancel(self):
+        self.status.set('Đã hủy thao tác.')
 
     def selected_profile(self):
         value = self.profile.get()
@@ -108,16 +122,23 @@ class App:
                 raise ShareError(ErrorCode.INVALID_REQUEST)
         return value.encode('utf-8')
 
-    def run(self, work, callback):
-        if self.busy:
-            return
-        self.busy = True
+    def set_busy(self, busy):
+        self.busy = busy
         for button in self.buttons:
-            button.state(['disabled'])
-        self.profiles.configure(state='disabled')
-        self.recipients.configure(state='disabled')
-        self.progress.start(12)
-        self.status.set('Đang xử lý…')
+            button.state(['disabled' if busy else '!disabled'])
+        state = 'disabled' if busy else 'readonly'
+        self.profiles.configure(state=state)
+        self.recipients.configure(state=state)
+        if busy:
+            self.progress.start(12)
+            self.status.set('Đang xử lý…')
+        else:
+            self.progress.stop()
+            self.status.set('Sẵn sàng.')
+
+    def run(self, work, callback):
+        if self.busy or self.closed:
+            return
 
         def execute():
             try:
@@ -128,6 +149,7 @@ class App:
             except Exception:
                 self.results.put((callback, None, ErrorCode.INTERNAL_ERROR))
         self.executor.submit(execute)
+        self.set_busy(True)
 
     def poll(self):
         try:
@@ -135,23 +157,19 @@ class App:
         except queue.Empty:
             pass
         else:
-            self.busy = False
-            self.progress.stop()
-            for button in self.buttons:
-                button.state(['!disabled'])
-            self.profiles.configure(state='readonly')
-            self.recipients.configure(state='readonly')
-            self.status.set('Sẵn sàng.')
+            self.set_busy(False)
             try:
                 if error:
-                    messagebox.showerror('Không hoàn tất', safe_message(error), parent=self.root)
+                    self.app.service.close()
+                    self.show_error(error)
                 else:
                     callback(result)
             except ShareError as exc:
-                messagebox.showerror('Không hoàn tất', exc.message, parent=self.root)
+                self.app.service.close()
+                self.show_error(exc.code)
             except Exception:
                 self.app.service.close()
-                messagebox.showerror('Không hoàn tất', safe_message(ErrorCode.INTERNAL_ERROR), parent=self.root)
+                self.show_error(ErrorCode.INTERNAL_ERROR)
         if not self.closed:
             self.root.after(80, self.poll)
 
@@ -166,9 +184,13 @@ class App:
     def refresh_contacts(self):
         self.contacts.delete(*self.contacts.get_children())
         entries = []
+        profile_id = self.profile.get()
+        contact_id = self.contact.get() if self.recipient_profile == profile_id else ''
+        self.recipients['values'] = ()
+        self.contact.set('')
         text = 'Chưa có hồ sơ. Chọn “Tạo hồ sơ” để bắt đầu.'
-        if self.profile.get():
-            profile = self.app.keys.get_profile(self.profile.get())
+        if profile_id:
+            profile = self.app.keys.get_profile(profile_id)
             text = f'{profile.display_name} ({profile.profile_id})\n\nKhóa mã hóa:\n{profile.encryption_fingerprint}\n\nKhóa chữ ký:\n{profile.signing_fingerprint}\n\nChỉ chia sẻ khóa công khai. Giữ riêng mật khẩu và hồ sơ khóa.'
             entries = self.app.trust.list_contacts(profile.profile_id)
         self.identity.configure(state='normal')
@@ -180,8 +202,9 @@ class App:
             self.contacts.insert('', 'end', iid=entry.contact_id, values=(f'{entry.display_name} ({entry.contact_id})', labels[entry.status]))
         recipients = [c.contact_id for c in entries if c.status is TrustStatus.VERIFIED]
         self.recipients['values'] = recipients
-        if self.contact.get() not in recipients:
-            self.contact.set(recipients[0] if recipients else '')
+        if contact_id in recipients:
+            self.contact.set(contact_id)
+        self.recipient_profile = profile_id
 
     def create_profile(self):
         profile_id = simpledialog.askstring('Tạo hồ sơ', 'Mã hồ sơ: chữ thường không dấu, số, _ hoặc -', parent=self.root)
@@ -290,40 +313,86 @@ class App:
 
     def result(self, result):
         if result.error:
-            messagebox.showerror('Không hoàn tất', f'{result.error.message}\nMã lỗi: {result.error.code}', parent=self.root)
+            self.show_error(result.error.code)
+        elif result.status is OperationStatus.CANCELLED:
+            self.cancel()
+        elif result.status is OperationStatus.SUCCESS and result.receipt is not None:
+            self.status.set(f'Đã lưu tệp tại {result.receipt.destination}')
         else:
-            self.status.set('Đã lưu tệp thành công.')
-        warnings = {WarningCode.DUPLICATE_TRANSFER: 'Gói này đã được mở trước đó.', WarningCode.HISTORY_UNAVAILABLE: 'Không đọc được lịch sử.', WarningCode.HISTORY_NOT_SAVED: 'Tệp đã lưu, nhưng chưa ghi được lịch sử.'}
+            self.show_error(ErrorCode.INTERNAL_ERROR)
+        warnings = {
+            WarningCode.DUPLICATE_TRANSFER: 'Gói này đã được mở trước đó.',
+            WarningCode.HISTORY_UNAVAILABLE: 'Không đọc được lịch sử.',
+            WarningCode.HISTORY_NOT_SAVED: 'Tệp đã lưu, nhưng chưa ghi được lịch sử.',
+        }
         if result.warnings:
-            messagebox.showwarning('Thông báo', '\n'.join(warnings[w] for w in result.warnings), parent=self.root)
+            notices = [warnings[warning] for warning in result.warnings]
+            if WarningCode.HISTORY_NOT_SAVED in result.warnings and result.receipt is not None:
+                notices.append(f'Vị trí tệp đã lưu: {result.receipt.destination}')
+            messagebox.showwarning('Thông báo', '\n'.join(notices), parent=self.root)
+
+    def choose_destination(self, filename, *, extension=''):
+        while True:
+            selected = filedialog.asksaveasfilename(
+                parent=self.root, initialfile=filename, defaultextension=extension)
+            if not selected:
+                return None
+            destination = Path(selected)
+            overwrite = destination.exists()
+            if not overwrite or messagebox.askyesno(
+                'Ghi đè', f'Thay thế tệp đang tồn tại?\n{destination}',
+                default=messagebox.NO, parent=self.root,
+            ):
+                return destination, overwrite
 
     def send(self):
-        profile, recipient = self.selected_profile(), self.contact.get()
-        if not recipient:
-            raise ShareError(ErrorCode.UNTRUSTED_RECIPIENT)
+        profile, contact_id = self.selected_profile(), self.contact.get()
+        if not contact_id:
+            self.status.set('Chọn người nhận đã xác minh trước khi gửi.')
+            return
+        recipient = self.app.trust.resolve_recipient(profile, contact_id)
         source = filedialog.askopenfilename(parent=self.root)
         if not source:
+            self.cancel()
             return
-        destination = filedialog.asksaveasfilename(parent=self.root, initialfile=Path(source).name + '.sfile', defaultextension='.sfile')
-        if not destination:
+        selected = self.choose_destination(f'{secrets.token_hex(16)}.sfile', extension='.sfile')
+        if selected is None:
+            self.cancel()
             return
-        overwrite = Path(destination).exists()
-        if overwrite and not messagebox.askyesno('Ghi đè', 'Thay thế tệp đích đang tồn tại?', parent=self.root):
+        destination, overwrite = selected
+        if not messagebox.askyesno(
+            'Xác nhận người nhận',
+            f'Mã người nhận: {recipient.contact_id}\nTên hiển thị: {recipient.display_name}\n'
+            f'Dấu vân tay khóa mã hóa:\n{recipient.encryption_fingerprint}\n'
+            f'Dấu vân tay khóa ký:\n{recipient.signing_fingerprint}\n\n'
+            f'Tệp nguồn: {source}\nGói sẽ lưu tại: {destination}\n\nMã hóa tệp cho người này?',
+            default=messagebox.NO, parent=self.root,
+        ):
+            self.cancel()
             return
         password = self.password()
-        if password is not None:
-            request = SendRequest(profile, recipient, Path(source), Path(destination), password, overwrite)
-            self.run(lambda: self.app.service.send_file(request), self.result)
+        if password is None:
+            self.cancel()
+            return
+        request = SendRequest(
+            profile, contact_id, Path(source), destination, password,
+            overwrite_confirmed=overwrite,
+            expected_recipient_fingerprints=(recipient.encryption_fingerprint, recipient.signing_fingerprint),
+        )
+        self.run(lambda: self.app.service.send_file(request), self.result)
 
     def receive(self):
         profile = self.selected_profile()
         package = filedialog.askopenfilename(parent=self.root, filetypes=[('Gói bảo mật', '*.sfile'), ('Tất cả', '*.*')])
         if not package:
+            self.cancel()
             return
         password = self.password()
-        if password is not None:
-            request = ReceiveRequest(profile, Path(package), password)
-            self.run(lambda: self.app.service.prepare_receive(request), self.prepared)
+        if password is None:
+            self.cancel()
+            return
+        request = ReceiveRequest(profile, Path(package), password)
+        self.run(lambda: self.app.service.prepare_receive(request), self.prepared)
 
     def prepared(self, result):
         if result.status is not OperationStatus.PREPARED:
@@ -335,28 +404,32 @@ class App:
             notice += '\nGói này đã được mở trước đó.'
         if WarningCode.HISTORY_UNAVAILABLE in result.warnings:
             notice += '\nKhông đọc được lịch sử mở tệp.'
-        if not messagebox.askyesno('Đã xác thực nội dung', notice + '\n\nLưu tệp đã giải mã?', parent=self.root):
-            self.app.service.discard_prepared(prepared.handle)
+        if not messagebox.askyesno(
+            'Đã xác thực nội dung', notice + '\n\nLưu tệp đã giải mã?',
+            default=messagebox.NO, parent=self.root,
+        ):
+            self.result(self.app.service.discard_prepared(prepared.handle))
             return
         self.save_prepared(prepared)
 
     def save_prepared(self, prepared):
-        destination = filedialog.asksaveasfilename(parent=self.root, initialfile=prepared.filename)
-        if not destination:
-            self.app.service.discard_prepared(prepared.handle)
+        selected = self.choose_destination(prepared.filename)
+        if selected is None:
+            self.result(self.app.service.discard_prepared(prepared.handle))
             return
-        overwrite = Path(destination).exists()
-        if overwrite and not messagebox.askyesno('Ghi đè', 'Thay thế tệp đích đang tồn tại?', parent=self.root):
-            self.app.service.discard_prepared(prepared.handle)
-            return
+        destination, overwrite = selected
+
         def done(result):
             self.result(result)
             if self.app.service.has_prepared:
                 if messagebox.askyesno('Chọn lại nơi lưu', 'Tệp chưa được lưu. Chọn nơi lưu khác?', parent=self.root):
                     self.save_prepared(prepared)
                 else:
-                    self.app.service.discard_prepared(prepared.handle)
-        self.run(lambda: self.app.service.save_received(prepared.handle, Path(destination), overwrite_confirmed=overwrite), done)
+                    self.result(self.app.service.discard_prepared(prepared.handle))
+        self.run(
+            lambda: self.app.service.save_received(prepared.handle, destination, overwrite_confirmed=overwrite),
+            done,
+        )
 
     def close(self):
         if self.busy:
@@ -369,7 +442,11 @@ class App:
 
 
 def main():
-    root = tk.Tk()
+    try:
+        root = tk.Tk()
+    except tk.TclError:
+        print('Không khởi động được giao diện Tkinter. Hãy kiểm tra cài đặt Python và Tcl/Tk.', file=sys.stderr)
+        return 2
     try:
         App(root, create_application())
     except Exception:

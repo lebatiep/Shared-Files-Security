@@ -445,6 +445,15 @@ class ServiceTests(unittest.TestCase):
                 self.assert_failed(self.send(), ErrorCode.UNTRUSTED_RECIPIENT)
         self.assertEqual(self.storage.writes, [])
 
+    @pytest.mark.case("S09")
+    def test_send_stops_if_confirmed_recipient_keys_changed(self):
+        recipient = self.trust.recipient
+        confirmed = (recipient.encryption_fingerprint, recipient.signing_fingerprint)
+        self.trust.recipient = replace(recipient, encryption_fingerprint="0" * 64)
+        result = self.send(expected_recipient_fingerprints=confirmed)
+        self.assert_failed(result, ErrorCode.UNTRUSTED_RECIPIENT, ProcessingStage.TRUST)
+        self.assertEqual(self.storage.writes, [])
+
     def test_overwrite_requires_actual_boolean(self):
         self.assert_failed(self.send(overwrite_confirmed="yes"), ErrorCode.INVALID_REQUEST)
         ready = self.prepared()

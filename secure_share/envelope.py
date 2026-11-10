@@ -238,8 +238,7 @@ def build_payload(filename: str, raw_file: bytes) -> bytes:
     return len(metadata).to_bytes(4, "big") + metadata + raw_file
 
 
-def parse_payload(payload: bytes) -> tuple:
-    """Kiểm tra khung, JSON và giới hạn; trả (filename, raw_file)."""
+def _unpack_payload(payload: bytes) -> tuple[str, bytes]:
     if not isinstance(payload, bytes):
         raise TypeError("Payload phải là bytes")
     if not 4 <= len(payload) <= MAX_PAYLOAD:
@@ -253,8 +252,17 @@ def parse_payload(payload: bytes) -> tuple:
     metadata = _strict_json(payload[4:offset], "PAYLOAD")
     if not isinstance(metadata, dict) or set(metadata) != {"filename"}:
         raise EnvelopeError("PAYLOAD", "Metadata phải chỉ chứa filename")
-    _validate_filename(metadata["filename"])
-    return metadata["filename"], payload[offset:]
+    filename = metadata["filename"]
+    if not isinstance(filename, str):
+        raise EnvelopeError("PAYLOAD", "Tên tệp phải là chuỗi")
+    return filename, payload[offset:]
+
+
+def parse_payload(payload: bytes) -> tuple[str, bytes]:
+    """Kiểm tra khung, JSON và giới hạn; trả (filename, raw_file)."""
+    filename, raw_file = _unpack_payload(payload)
+    _validate_filename(filename)
+    return filename, raw_file
 
 
 def read_json(data, limit):
@@ -273,11 +281,22 @@ def encode_json(value):
 def _safe_filename(name):
     if not isinstance(name, str) or not name or len(name) > 255:
         raise ShareError(ErrorCode.PAYLOAD_INVALID)
+    try:
+        encoded_name = name.encode("utf-8")
+    except UnicodeError:
+        raise ShareError(ErrorCode.PAYLOAD_INVALID) from None
+    if len(encoded_name) > 255:
+        raise ShareError(ErrorCode.PAYLOAD_INVALID)
     if any(ord(c) < 32 or ord(c) == 127 or c in '<>:"/\\|?*' for c in name):
         raise ShareError(ErrorCode.PAYLOAD_INVALID)
-    stem = name.split(".")[0].upper()
-    if name.endswith((" ", ".")) or stem in {"CON", "PRN", "AUX", "NUL", *(f"COM{i}" for i in range(1, 10)), *(f"LPT{i}" for i in range(1, 10))}:
+    stem = name.split(".")[0].rstrip(" ").upper()
+    if name.endswith((" ", ".")) or stem in _WINDOWS_DEVICE_NAMES:
         raise ShareError(ErrorCode.PAYLOAD_INVALID)
+
+
+_WINDOWS_DEVICE_NAMES = {"CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$"} | {
+    prefix + digit for prefix in ("COM", "LPT") for digit in "123456789¹²³"
+}
 
 
 def _domain_call(function, *args):
@@ -306,8 +325,11 @@ class EnvelopeCodec:
     def parse_payload(self, data):
         if not isinstance(data, bytes):
             raise ShareError(ErrorCode.PAYLOAD_INVALID)
-        filename, raw = _domain_call(parse_payload, data)
-        _safe_filename(filename)
+        filename, raw = _domain_call(_unpack_payload, data)
+        try:
+            _safe_filename(filename)
+        except ShareError:
+            filename = "recovered.bin"
         return Payload(filename, raw)
 
     def build_aad(self, header_bytes, wrapped_key):

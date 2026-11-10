@@ -8,7 +8,12 @@ gian thực thi hằng định, mã chưa được kiểm toán.
 from math import gcd, isqrt
 from os import urandom
 
-from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.exceptions import InvalidSignature, InvalidTag
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding, rsa
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+from .config import AES_KEY_BYTES, NONCE_BYTES, OAEP_LABEL, PSS_SALT_BYTES, RSA_KEY_BITS, RSA_PUBLIC_EXPONENT
 
 from .errors import ErrorCode, ShareError
 
@@ -493,70 +498,77 @@ def generate_rsa_key(bits: int = 3072, e: int = 65537) -> tuple:
         return p * q, e, modinv(e, lam), p, q
 
 
-def _public_numbers(key):
-    if not isinstance(key, rsa.RSAPublicKey):
+def _public_key(key):
+    if (
+        not isinstance(key, rsa.RSAPublicKey)
+        or key.key_size != RSA_KEY_BITS
+        or key.public_numbers().e != RSA_PUBLIC_EXPONENT
+    ):
         raise ShareError(ErrorCode.PROFILE_INVALID)
-    numbers = key.public_numbers()
-    if key.key_size != 3072 or numbers.e != 65537:
-        raise ShareError(ErrorCode.PROFILE_INVALID)
-    return numbers
+    return key
 
 
-def _private_numbers(key):
+def _private_key(key):
     if not isinstance(key, rsa.RSAPrivateKey):
         raise ShareError(ErrorCode.PROFILE_INVALID)
-    _public_numbers(key.public_key())
-    return key.private_numbers()
+    _public_key(key.public_key())
+    return key
+
+
+_OAEP = padding.OAEP(mgf=padding.MGF1(hashes.SHA256()), algorithm=hashes.SHA256(), label=OAEP_LABEL)
+_PSS = padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=PSS_SALT_BYTES)
 
 
 class CryptoOps:
+    """Library backend for the desktop app. SFILE v1 packets stay compatible."""
+
     def generate_aes_key(self):
-        return urandom(32)
+        return AESGCM.generate_key(bit_length=AES_KEY_BYTES * 8)
 
     def generate_nonce(self):
-        return urandom(12)
+        return urandom(NONCE_BYTES)
 
     def wrap_key(self, aes_key, public_key):
-        if not isinstance(aes_key, bytes) or len(aes_key) != 32:
+        if not isinstance(aes_key, bytes) or len(aes_key) != AES_KEY_BYTES:
             raise ShareError(ErrorCode.AES_KEY_LENGTH_INVALID)
-        numbers = _public_numbers(public_key)
-        return wrap_key(aes_key, numbers.n, numbers.e)
+        return _public_key(public_key).encrypt(aes_key, _OAEP)
 
     def unwrap_key(self, wrapped_key, private_key):
-        numbers = _private_numbers(private_key)
         try:
-            return unwrap_key(wrapped_key, numbers.public_numbers.n, numbers.d)
-        except AESKeyLengthError:
-            raise ShareError(ErrorCode.AES_KEY_LENGTH_INVALID) from None
+            aes_key = _private_key(private_key).decrypt(wrapped_key, _OAEP)
         except (ValueError, TypeError):
             raise ShareError(ErrorCode.UNWRAP_FAILED) from None
+        if len(aes_key) != AES_KEY_BYTES:
+            raise ShareError(ErrorCode.AES_KEY_LENGTH_INVALID)
+        return aes_key
+
+    @staticmethod
+    def _check_aead_inputs(key, nonce):
+        if not isinstance(key, bytes) or len(key) != AES_KEY_BYTES or not isinstance(nonce, bytes) or len(nonce) != NONCE_BYTES:
+            raise ShareError(ErrorCode.INVALID_LENGTH)
 
     def encrypt_payload(self, key, nonce, payload, aad):
+        self._check_aead_inputs(key, nonce)
         try:
-            return encrypt_payload(payload, key, nonce, aad)
+            return AESGCM(key).encrypt(nonce, payload, aad)
         except (ValueError, TypeError):
             raise ShareError(ErrorCode.INVALID_LENGTH) from None
 
     def decrypt_payload(self, key, nonce, ciphertext, aad):
-        if not isinstance(key, bytes) or len(key) != 32 or not isinstance(nonce, bytes) or len(nonce) != 12:
-            raise ShareError(ErrorCode.INVALID_LENGTH)
+        self._check_aead_inputs(key, nonce)
         try:
-            return decrypt_payload(ciphertext, key, nonce, aad)
-        except (ValueError, TypeError):
+            return AESGCM(key).decrypt(nonce, ciphertext, aad)
+        except (InvalidTag, ValueError, TypeError):
             raise ShareError(ErrorCode.GCM_AUTH_FAILED) from None
 
     def sign_package(self, message, private_key):
-        numbers = _private_numbers(private_key)
         try:
-            return sign_package(message, numbers.public_numbers.n, numbers.d)
+            return _private_key(private_key).sign(message, _PSS, hashes.SHA256())
         except (ValueError, TypeError):
             raise ShareError(ErrorCode.INVALID_REQUEST) from None
 
     def verify_signature(self, signature, message, public_key):
-        numbers = _public_numbers(public_key)
         try:
-            valid = verify_signature(message, signature, numbers.n, numbers.e)
-        except (ValueError, TypeError):
-            valid = False
-        if not valid:
-            raise ShareError(ErrorCode.SIGNATURE_INVALID)
+            _public_key(public_key).verify(signature, message, _PSS, hashes.SHA256())
+        except (InvalidSignature, ValueError, TypeError):
+            raise ShareError(ErrorCode.SIGNATURE_INVALID) from None

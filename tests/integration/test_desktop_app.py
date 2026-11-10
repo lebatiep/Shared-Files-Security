@@ -56,11 +56,15 @@ def send(app, tmp_path, data=b'Private survey\x00\xff'):
 
 # Explicit ids: pytest puts the id in PYTEST_CURRENT_TEST, and a 10 MiB id
 # exceeds the 32,767-character environment limit on Windows.
-@pytest.mark.parametrize('data', [b'', b'a', 'Tiếng Việt 日本語'.encode(), bytes(range(256)) * 10, b'x' * MAX_FILE_BYTES],
-                         ids=['empty', 'one-byte', 'unicode-text', 'binary-2560-bytes', 'max-10MiB'])
+@pytest.mark.parametrize('data', [
+    pytest.param(b'', marks=pytest.mark.case('S01'), id='empty'),
+    pytest.param(b'a', id='one-byte'),
+    pytest.param('Tiếng Việt 日本語'.encode(), id='unicode-text'),
+    pytest.param(bytes(range(256)) * 10, id='binary-2560-bytes'),
+    pytest.param(b'x' * MAX_FILE_BYTES, marks=pytest.mark.case('S04'), id='max-10MiB'),
+])
 @pytest.mark.case("S03")
 @pytest.mark.case("R01")
-@pytest.mark.case("S01")
 def test_real_disk_roundtrip(app, tmp_path, data):
     source, package = send(app, tmp_path, data)
     # Reload every provider to prove persistence rather than shared in-memory keys.
@@ -88,9 +92,10 @@ def test_oversized_file_never_creates_package(app, tmp_path):
     assert not output.exists()
 
 
-@pytest.mark.case("A06")
-@pytest.mark.case("I07")
-@pytest.mark.parametrize('profile,password,code', [('mallory', PASSWORD, ErrorCode.RECIPIENT_KEY_NOT_FOUND), ('bob', b'wrong', ErrorCode.KEY_UNLOCK_FAILED)])
+@pytest.mark.parametrize('profile,password,code', [
+    pytest.param('mallory', PASSWORD, ErrorCode.RECIPIENT_KEY_NOT_FOUND, marks=pytest.mark.case('A06'), id='wrong-recipient'),
+    pytest.param('bob', b'wrong', ErrorCode.KEY_UNLOCK_FAILED, marks=pytest.mark.case('I07'), id='wrong-passphrase'),
+])
 def test_wrong_recipient_or_password(app, tmp_path, profile, password, code):
     _, package = send(app, tmp_path)
     result = app.service.prepare_receive(ReceiveRequest(profile, package, password))
@@ -98,23 +103,32 @@ def test_wrong_recipient_or_password(app, tmp_path, profile, password, code):
     assert not app.service.has_prepared
 
 
-@pytest.mark.case("A03")
-@pytest.mark.parametrize('field', EnvelopeCodec.fields)
+@pytest.mark.parametrize('field', [
+    pytest.param(field, marks=pytest.mark.case('A02' if field == 'signature_b64' else 'A03'))
+    for field in EnvelopeCodec.fields
+])
 def test_each_authenticated_component_rejects_tampering(app, tmp_path, field):
     _, package = send(app, tmp_path)
     obj = json.loads(package.read_bytes())
     raw = bytearray(base64.b64decode(obj[field]))
-    raw[-1] ^= 1
+    if field == 'header_b64':
+        header = json.loads(raw)
+        original = header['transfer_id']
+        header['transfer_id'] = ('1' if original[0] == '0' else '0') + original[1:]
+        raw = encode_json(header)
+    else:
+        raw[-1] ^= 1
     obj[field] = base64.b64encode(raw).decode()
     package.write_bytes(encode_json(obj))
     result = app.service.prepare_receive(ReceiveRequest('bob', package, PASSWORD))
-    assert result.status is OperationStatus.FAILED
+    assert result.error.code is ErrorCode.SIGNATURE_INVALID
     assert not app.service.has_prepared
 
 
-@pytest.mark.case("A07")
-@pytest.mark.case("A09")
-@pytest.mark.parametrize('field,expected', [('wrapped_key', ErrorCode.UNWRAP_FAILED), ('ciphertext', ErrorCode.GCM_AUTH_FAILED)])
+@pytest.mark.parametrize('field,expected', [
+    pytest.param('wrapped_key', ErrorCode.UNWRAP_FAILED, marks=pytest.mark.case('A07'), id='invalid-oaep'),
+    pytest.param('ciphertext', ErrorCode.GCM_AUTH_FAILED, marks=pytest.mark.case('A09'), id='invalid-gcm-tag'),
+])
 def test_signed_but_invalid_crypto_is_rejected(app, tmp_path, field, expected):
     _, package = send(app, tmp_path)
     codec, crypto = EnvelopeCodec(), CryptoOps()
@@ -310,14 +324,38 @@ def test_history_failure_does_not_undo_saved_file(app, tmp_path):
     assert output.exists()
 
 
-@pytest.mark.case("R04")
-@pytest.mark.case("R05")
-@pytest.mark.parametrize('name', ['../evil', 'a/b', 'a\\b', 'a:b', 'CON', 'NUL.txt', 'COM1', 'trailing.', 'trailing ', '\x00', '\n', ''])
-def test_unsafe_payload_names_rejected(name):
-    codec = EnvelopeCodec()
+@pytest.mark.parametrize('name', [
+    pytest.param('../outside', marks=pytest.mark.case('R04')),
+    pytest.param('..\\outside', marks=pytest.mark.case('R04')),
+    pytest.param('C:\\outside', marks=pytest.mark.case('R04')),
+    pytest.param('file:stream', marks=pytest.mark.case('R04')),
+    *[pytest.param(name, marks=pytest.mark.case('R05')) for name in
+      ('CON', 'NUL.txt', 'COM1', 'COM¹.txt', 'trailing.', 'trailing ', '\x00', '\n', '', 'a' * 256)],
+])
+def test_authenticated_unsafe_filename_gets_safe_save_suggestion(app, tmp_path, name):
+    source, package = send(app, tmp_path)
+    codec, crypto = EnvelopeCodec(), CryptoOps()
+    envelope = codec.parse_envelope(package.read_bytes())
+    receiving_key = app.keys.unlock_private_key('bob', KeyRole.ENCRYPTION, envelope.header.recipient_enc_fp, PASSWORD)
+    signing_key = app.keys.unlock_private_key('alice', KeyRole.SIGNING, envelope.header.sender_sig_fp, PASSWORD)
+    key = crypto.unwrap_key(envelope.wrapped_key, receiving_key)
+    nonce = crypto.generate_nonce()
     metadata = encode_json({'filename': name})
-    with pytest.raises(ShareError):
-        codec.parse_payload(len(metadata).to_bytes(4, 'big') + metadata + b'data')
+    payload = len(metadata).to_bytes(4, 'big') + metadata + source.read_bytes()
+    aad = codec.build_aad(envelope.header_bytes, envelope.wrapped_key)
+    ciphertext = crypto.encrypt_payload(key, nonce, payload, aad)
+    message = codec.build_signature_input(envelope.header_bytes, envelope.wrapped_key, nonce, ciphertext)
+    signature = crypto.sign_package(message, signing_key)
+    package.write_bytes(codec.serialize_envelope(replace(envelope, nonce=nonce, ciphertext=ciphertext, signature=signature)))
+
+    received = app.service.prepare_receive(ReceiveRequest('bob', package, PASSWORD))
+    assert received.status is OperationStatus.PREPARED
+    assert received.prepared.filename == 'recovered.bin'
+    assert not (tmp_path / 'recovered.bin').exists()
+    output = tmp_path / 'chosen.bin'
+    saved = app.service.save_received(received.prepared.handle, output)
+    assert saved.status is OperationStatus.SUCCESS
+    assert output.read_bytes() == source.read_bytes()
 
 
 @pytest.mark.case("P01")
@@ -360,11 +398,11 @@ def test_strict_envelope_schema(app, tmp_path, mutation):
 @pytest.mark.case("O03")
 def test_storage_no_clobber_race(tmp_path, monkeypatch):
     output = tmp_path / 'output'
-    real_link = os.link
+    publish_new = LocalStorage._publish_new
     def race(source, destination):
         Path(destination).write_bytes(b'other writer')
-        real_link(source, destination)
-    monkeypatch.setattr(os, 'link', race)
+        publish_new(source, destination)
+    monkeypatch.setattr(LocalStorage, '_publish_new', staticmethod(race))
     with pytest.raises(ShareError) as error:
         LocalStorage().save_atomic(b'new data', output)
     assert error.value.code is ErrorCode.DESTINATION_EXISTS
@@ -395,6 +433,7 @@ def test_hardlink_alias_to_private_key_is_protected(app, tmp_path):
     assert error.value.code is ErrorCode.PROTECTED_PATH
 
 
+@pytest.mark.case("R01")
 def test_tk_send_and_receive_with_real_workers(app, tmp_path, monkeypatch):
     import tkinter as tk
     from secure_share.ui import app as ui
