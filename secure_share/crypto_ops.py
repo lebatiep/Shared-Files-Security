@@ -519,6 +519,21 @@ _OAEP = padding.OAEP(mgf=padding.MGF1(hashes.SHA256()), algorithm=hashes.SHA256(
 _PSS = padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=PSS_SALT_BYTES)
 
 
+def _threshold_oaep(label):
+    return padding.OAEP(mgf=padding.MGF1(hashes.SHA256()), algorithm=hashes.SHA256(), label=label)
+
+
+def wrap_threshold_secret(secret, public_key, label):
+    return _public_key(public_key).encrypt(secret, _threshold_oaep(label))
+
+
+def unwrap_threshold_secret(wrapped, private_key, label):
+    try:
+        return _private_key(private_key).decrypt(wrapped, _threshold_oaep(label))
+    except (ValueError, TypeError):
+        raise ShareError(ErrorCode.INVALID_SHARE) from None
+
+
 class CryptoOps:
     """Library backend for the desktop app. SFILE v1 packets stay compatible."""
 

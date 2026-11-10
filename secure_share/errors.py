@@ -11,6 +11,8 @@ class ErrorCode(StrEnum):
     READ_FAILED = "READ_FAILED"
     INPUT_TOO_LARGE = "INPUT_TOO_LARGE"
     INVALID_REQUEST = "INVALID_REQUEST"
+    INVALID_THRESHOLD_RECIPIENTS = "INVALID_THRESHOLD_RECIPIENTS"
+    INVALID_SHARE = "INVALID_SHARE"
     INVALID_JSON = "INVALID_JSON"
     INVALID_SCHEMA = "INVALID_SCHEMA"
     INVALID_BASE64 = "INVALID_BASE64"
@@ -43,6 +45,8 @@ _SAFE_MESSAGES: dict[ErrorCode, str] = {
     ErrorCode.READ_FAILED: "Không đọc được tệp đã chọn.",
     ErrorCode.INPUT_TOO_LARGE: "Dữ liệu vượt giới hạn cho phép.",
     ErrorCode.INVALID_REQUEST: "Thông tin tác vụ không hợp lệ.",
+    ErrorCode.INVALID_THRESHOLD_RECIPIENTS: "Chọn ba người giữ khóa khác nhau. Khi gửi phần chia, hãy chọn một người giữ khác có trong gói.",
+    ErrorCode.INVALID_SHARE: "Phần chia không hợp lệ hoặc không dành cho gói và hồ sơ này. Cần hai phần chia khác nhau.",
     ErrorCode.INVALID_JSON: "Dữ liệu JSON không hợp lệ.",
     ErrorCode.INVALID_SCHEMA: "Cấu trúc dữ liệu không hợp lệ.",
     ErrorCode.INVALID_BASE64: "Dữ liệu Base64 không hợp lệ.",

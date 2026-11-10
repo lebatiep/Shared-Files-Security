@@ -28,3 +28,4 @@ jobs:
           path: .test-results/cases.json
           include-hidden-files: true
       - run: python -m tools.demo
+      - run: python -m tools.demo_threshold
