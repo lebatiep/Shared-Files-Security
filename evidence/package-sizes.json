@@ -1,0 +1,250 @@
+{
+  "schema_version": 1,
+  "commit": "a6106d1d4d5869d87aafa3af79acd4597066d607",
+  "measured_at_utc": "2026-11-10T11:29:39.048365+00:00",
+  "mode": "shamir_2_of_3",
+  "repeats": 3,
+  "source_filename": "input.bin",
+  "content_pattern": "byte 0x78 repeated to the requested source size",
+  "measurement": "File sizes in bytes after successful save; separate transfers from the timed benchmark. One machine, separate synthetic profiles, original unmodified service. The combined size counts one package and one contribution, not all copies sent to all holders.",
+  "max_package_bytes": 15728640,
+  "max_contribution_bytes": 2048,
+  "results": [
+    {
+      "source_bytes": 0,
+      "samples": [
+        {
+          "iteration": 1,
+          "source_bytes": 0,
+          "package_bytes": 3183,
+          "contribution_bytes": 816,
+          "package_overhead_bytes": 3183,
+          "package_expansion_ratio": null,
+          "package_and_one_contribution_bytes": 3999,
+          "package_within_cap": true,
+          "contribution_within_cap": true,
+          "byte_and_sha256_comparison": {
+            "equal": true,
+            "expected_bytes": 0,
+            "actual_bytes": 0,
+            "expected_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "actual_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "iteration": 2,
+          "source_bytes": 0,
+          "package_bytes": 3183,
+          "contribution_bytes": 816,
+          "package_overhead_bytes": 3183,
+          "package_expansion_ratio": null,
+          "package_and_one_contribution_bytes": 3999,
+          "package_within_cap": true,
+          "contribution_within_cap": true,
+          "byte_and_sha256_comparison": {
+            "equal": true,
+            "expected_bytes": 0,
+            "actual_bytes": 0,
+            "expected_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "actual_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        },
+        {
+          "iteration": 3,
+          "source_bytes": 0,
+          "package_bytes": 3183,
+          "contribution_bytes": 816,
+          "package_overhead_bytes": 3183,
+          "package_expansion_ratio": null,
+          "package_and_one_contribution_bytes": 3999,
+          "package_within_cap": true,
+          "contribution_within_cap": true,
+          "byte_and_sha256_comparison": {
+            "equal": true,
+            "expected_bytes": 0,
+            "actual_bytes": 0,
+            "expected_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "actual_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      ]
+    },
+    {
+      "source_bytes": 1024,
+      "samples": [
+        {
+          "iteration": 1,
+          "source_bytes": 1024,
+          "package_bytes": 4547,
+          "contribution_bytes": 816,
+          "package_overhead_bytes": 3523,
+          "package_expansion_ratio": 4.4404296875,
+          "package_and_one_contribution_bytes": 5363,
+          "package_within_cap": true,
+          "contribution_within_cap": true,
+          "byte_and_sha256_comparison": {
+            "equal": true,
+            "expected_bytes": 1024,
+            "actual_bytes": 1024,
+            "expected_sha256": "49abd65bbf7f7e40c7055093ed2e3fd75f2f602f2c5fcf955c213e3135eb03f7",
+            "actual_sha256": "49abd65bbf7f7e40c7055093ed2e3fd75f2f602f2c5fcf955c213e3135eb03f7"
+          }
+        },
+        {
+          "iteration": 2,
+          "source_bytes": 1024,
+          "package_bytes": 4547,
+          "contribution_bytes": 816,
+          "package_overhead_bytes": 3523,
+          "package_expansion_ratio": 4.4404296875,
+          "package_and_one_contribution_bytes": 5363,
+          "package_within_cap": true,
+          "contribution_within_cap": true,
+          "byte_and_sha256_comparison": {
+            "equal": true,
+            "expected_bytes": 1024,
+            "actual_bytes": 1024,
+            "expected_sha256": "49abd65bbf7f7e40c7055093ed2e3fd75f2f602f2c5fcf955c213e3135eb03f7",
+            "actual_sha256": "49abd65bbf7f7e40c7055093ed2e3fd75f2f602f2c5fcf955c213e3135eb03f7"
+          }
+        },
+        {
+          "iteration": 3,
+          "source_bytes": 1024,
+          "package_bytes": 4547,
+          "contribution_bytes": 816,
+          "package_overhead_bytes": 3523,
+          "package_expansion_ratio": 4.4404296875,
+          "package_and_one_contribution_bytes": 5363,
+          "package_within_cap": true,
+          "contribution_within_cap": true,
+          "byte_and_sha256_comparison": {
+            "equal": true,
+            "expected_bytes": 1024,
+            "actual_bytes": 1024,
+            "expected_sha256": "49abd65bbf7f7e40c7055093ed2e3fd75f2f602f2c5fcf955c213e3135eb03f7",
+            "actual_sha256": "49abd65bbf7f7e40c7055093ed2e3fd75f2f602f2c5fcf955c213e3135eb03f7"
+          }
+        }
+      ]
+    },
+    {
+      "source_bytes": 1048576,
+      "samples": [
+        {
+          "iteration": 1,
+          "source_bytes": 1048576,
+          "package_bytes": 1401283,
+          "contribution_bytes": 816,
+          "package_overhead_bytes": 352707,
+          "package_expansion_ratio": 1.3363676071166992,
+          "package_and_one_contribution_bytes": 1402099,
+          "package_within_cap": true,
+          "contribution_within_cap": true,
+          "byte_and_sha256_comparison": {
+            "equal": true,
+            "expected_bytes": 1048576,
+            "actual_bytes": 1048576,
+            "expected_sha256": "8f990ba0b577b51cf009ea049368c16bbda1b21e1b93be07a824758bb253c39b",
+            "actual_sha256": "8f990ba0b577b51cf009ea049368c16bbda1b21e1b93be07a824758bb253c39b"
+          }
+        },
+        {
+          "iteration": 2,
+          "source_bytes": 1048576,
+          "package_bytes": 1401283,
+          "contribution_bytes": 816,
+          "package_overhead_bytes": 352707,
+          "package_expansion_ratio": 1.3363676071166992,
+          "package_and_one_contribution_bytes": 1402099,
+          "package_within_cap": true,
+          "contribution_within_cap": true,
+          "byte_and_sha256_comparison": {
+            "equal": true,
+            "expected_bytes": 1048576,
+            "actual_bytes": 1048576,
+            "expected_sha256": "8f990ba0b577b51cf009ea049368c16bbda1b21e1b93be07a824758bb253c39b",
+            "actual_sha256": "8f990ba0b577b51cf009ea049368c16bbda1b21e1b93be07a824758bb253c39b"
+          }
+        },
+        {
+          "iteration": 3,
+          "source_bytes": 1048576,
+          "package_bytes": 1401283,
+          "contribution_bytes": 816,
+          "package_overhead_bytes": 352707,
+          "package_expansion_ratio": 1.3363676071166992,
+          "package_and_one_contribution_bytes": 1402099,
+          "package_within_cap": true,
+          "contribution_within_cap": true,
+          "byte_and_sha256_comparison": {
+            "equal": true,
+            "expected_bytes": 1048576,
+            "actual_bytes": 1048576,
+            "expected_sha256": "8f990ba0b577b51cf009ea049368c16bbda1b21e1b93be07a824758bb253c39b",
+            "actual_sha256": "8f990ba0b577b51cf009ea049368c16bbda1b21e1b93be07a824758bb253c39b"
+          }
+        }
+      ]
+    },
+    {
+      "source_bytes": 10485760,
+      "samples": [
+        {
+          "iteration": 1,
+          "source_bytes": 10485760,
+          "package_bytes": 13984195,
+          "contribution_bytes": 816,
+          "package_overhead_bytes": 3498435,
+          "package_expansion_ratio": 1.33363676071167,
+          "package_and_one_contribution_bytes": 13985011,
+          "package_within_cap": true,
+          "contribution_within_cap": true,
+          "byte_and_sha256_comparison": {
+            "equal": true,
+            "expected_bytes": 10485760,
+            "actual_bytes": 10485760,
+            "expected_sha256": "462a12a876c0364e4f1f3d12ed33dcae125f1198010ff78d8f4c3f4de0412d49",
+            "actual_sha256": "462a12a876c0364e4f1f3d12ed33dcae125f1198010ff78d8f4c3f4de0412d49"
+          }
+        },
+        {
+          "iteration": 2,
+          "source_bytes": 10485760,
+          "package_bytes": 13984195,
+          "contribution_bytes": 816,
+          "package_overhead_bytes": 3498435,
+          "package_expansion_ratio": 1.33363676071167,
+          "package_and_one_contribution_bytes": 13985011,
+          "package_within_cap": true,
+          "contribution_within_cap": true,
+          "byte_and_sha256_comparison": {
+            "equal": true,
+            "expected_bytes": 10485760,
+            "actual_bytes": 10485760,
+            "expected_sha256": "462a12a876c0364e4f1f3d12ed33dcae125f1198010ff78d8f4c3f4de0412d49",
+            "actual_sha256": "462a12a876c0364e4f1f3d12ed33dcae125f1198010ff78d8f4c3f4de0412d49"
+          }
+        },
+        {
+          "iteration": 3,
+          "source_bytes": 10485760,
+          "package_bytes": 13984195,
+          "contribution_bytes": 816,
+          "package_overhead_bytes": 3498435,
+          "package_expansion_ratio": 1.33363676071167,
+          "package_and_one_contribution_bytes": 13985011,
+          "package_within_cap": true,
+          "contribution_within_cap": true,
+          "byte_and_sha256_comparison": {
+            "equal": true,
+            "expected_bytes": 10485760,
+            "actual_bytes": 10485760,
+            "expected_sha256": "462a12a876c0364e4f1f3d12ed33dcae125f1198010ff78d8f4c3f4de0412d49",
+            "actual_sha256": "462a12a876c0364e4f1f3d12ed33dcae125f1198010ff78d8f4c3f4de0412d49"
+          }
+        }
+      ]
+    }
+  ]
+}

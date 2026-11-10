@@ -1,0 +1,121 @@
+{
+  "python": "3.14.8",
+  "os": "Windows-11-10.0.26100-SP0",
+  "cpu": "Intel64 Family 6 Model 165 Stepping 2, GenuineIntel",
+  "ram_bytes": 25475506176,
+  "revision": "a6106d1d4d5869d87aafa3af79acd4597066d607",
+  "cryptography": "50.0.2",
+  "mode": "shamir_2_of_3",
+  "measurement": "Single machine with distinct profiles and passphrases. Timings include key loading, cryptography and disk I/O. They exclude key setup, dialogs and output comparison.",
+  "repeats": 3,
+  "results": [
+    {
+      "bytes": 0,
+      "send_ms": [
+        323.6660999828018,
+        303.64279996138066,
+        316.84390001464635
+      ],
+      "contribute_ms": [
+        291.6160000022501,
+        268.38239998323843,
+        315.54250000044703
+      ],
+      "receive_and_save_ms": [
+        239.55759999807924,
+        237.63699998380616,
+        254.1705999756232
+      ],
+      "source_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "restored_sha256": [
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      ],
+      "median_send_ms": 316.84390001464635,
+      "median_contribute_ms": 291.6160000022501,
+      "median_receive_ms": 239.55759999807924
+    },
+    {
+      "bytes": 1024,
+      "send_ms": [
+        321.88639999367297,
+        288.49569999147207,
+        302.20850004116073
+      ],
+      "contribute_ms": [
+        268.1626999983564,
+        261.64659997448325,
+        270.1899000094272
+      ],
+      "receive_and_save_ms": [
+        225.47850001137704,
+        216.82550001423806,
+        304.55519998213276
+      ],
+      "source_sha256": "49abd65bbf7f7e40c7055093ed2e3fd75f2f602f2c5fcf955c213e3135eb03f7",
+      "restored_sha256": [
+        "49abd65bbf7f7e40c7055093ed2e3fd75f2f602f2c5fcf955c213e3135eb03f7",
+        "49abd65bbf7f7e40c7055093ed2e3fd75f2f602f2c5fcf955c213e3135eb03f7",
+        "49abd65bbf7f7e40c7055093ed2e3fd75f2f602f2c5fcf955c213e3135eb03f7"
+      ],
+      "median_send_ms": 302.20850004116073,
+      "median_contribute_ms": 268.1626999983564,
+      "median_receive_ms": 225.47850001137704
+    },
+    {
+      "bytes": 1048576,
+      "send_ms": [
+        317.2140000388026,
+        305.3834000020288,
+        325.57480002287775
+      ],
+      "contribute_ms": [
+        287.1676000067964,
+        418.58290001982823,
+        277.27439999580383
+      ],
+      "receive_and_save_ms": [
+        233.75079996185377,
+        260.39380003931,
+        238.7853999971412
+      ],
+      "source_sha256": "8f990ba0b577b51cf009ea049368c16bbda1b21e1b93be07a824758bb253c39b",
+      "restored_sha256": [
+        "8f990ba0b577b51cf009ea049368c16bbda1b21e1b93be07a824758bb253c39b",
+        "8f990ba0b577b51cf009ea049368c16bbda1b21e1b93be07a824758bb253c39b",
+        "8f990ba0b577b51cf009ea049368c16bbda1b21e1b93be07a824758bb253c39b"
+      ],
+      "median_send_ms": 317.2140000388026,
+      "median_contribute_ms": 287.1676000067964,
+      "median_receive_ms": 238.7853999971412
+    },
+    {
+      "bytes": 10485760,
+      "send_ms": [
+        463.91239995136857,
+        495.281099982094,
+        462.194100022316
+      ],
+      "contribute_ms": [
+        417.942900035996,
+        593.0759999901056,
+        404.67989997705445
+      ],
+      "receive_and_save_ms": [
+        402.1869000280276,
+        428.09409997425973,
+        373.39699995936826
+      ],
+      "source_sha256": "462a12a876c0364e4f1f3d12ed33dcae125f1198010ff78d8f4c3f4de0412d49",
+      "restored_sha256": [
+        "462a12a876c0364e4f1f3d12ed33dcae125f1198010ff78d8f4c3f4de0412d49",
+        "462a12a876c0364e4f1f3d12ed33dcae125f1198010ff78d8f4c3f4de0412d49",
+        "462a12a876c0364e4f1f3d12ed33dcae125f1198010ff78d8f4c3f4de0412d49"
+      ],
+      "median_send_ms": 463.91239995136857,
+      "median_contribute_ms": 417.942900035996,
+      "median_receive_ms": 402.1869000280276
+    }
+  ]
+}

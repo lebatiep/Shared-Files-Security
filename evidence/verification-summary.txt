@@ -1,0 +1,56 @@
+VERIFICATION RESULTS
+
+Tested source commit: a6106d1d4d5869d87aafa3af79acd4597066d607
+Measurement completed: 2026-11-10T18:29:39.215183+07:00
+Evidence prepared after commit: fdfe6521974fa3a3b2f3bc38741ab054a7f61456
+The later commit adds the project analysis report only; application, tests,
+tools and configuration are unchanged from the tested source commit.
+During evidence preparation, the tracked analysis report is already absent
+from the working directory. That unrelated deletion is left untouched and
+is not part of the six evidence files prepared here.
+
+AUTOMATED ACCEPTANCE
+441 passed, 190 subtests passed in 92.99s (0:01:32).
+60/60 acceptance IDs have passing linked automated tests.
+Manual acceptance and independent human review were not performed in this run.
+
+Files:
+- acceptance-results.json: per-ID outcomes, linked tests and source metadata.
+- test-run.txt: complete console output of the acceptance run.
+- environment.json: startup/environment check.
+
+The acceptance metadata working_tree_dirty=true is preserved as recorded.
+At run time, the only untracked file was BAO_CAO_DOI_CHIEU_DU_AN.md.
+SHA-256 checks before and after the run covered 67 pre-existing files,
+including all tracked files and that report, with no content changes.
+
+TIMED BENCHMARK
+Original tools.benchmark, unmodified; 3 runs per source size.
+One machine with separate synthetic profiles and passphrases.
+Timings include private-key loading, cryptography and disk I/O.
+They exclude profile/key setup, dialogs and output comparison.
+All 12 timed recoveries matched the source SHA-256.
+Raw timing samples, medians and hardware/software metadata: benchmark-results.json.
+
+Source bytes | median create ms | median contribute ms | median open+save ms | package bytes | contribution bytes
+0            | 316.84           | 291.62               | 239.56              | 3183          | 816
+1024         | 302.21           | 268.16               | 225.48              | 4547          | 816
+1048576      | 317.21           | 287.17               | 238.79              | 1401283       | 816
+10485760     | 463.91           | 417.94               | 402.19              | 13984195      | 816
+
+OUTPUT SIZE MEASUREMENTS
+Raw size samples and full byte/hash comparisons: package-sizes.json.
+Sizes came from 12 additional successful transfers, separately from the timed
+benchmark samples, using the original application service without modification.
+Each source size was measured 3 times. Source filename: input.bin.
+All 12 size-measurement recoveries matched source bytes and SHA-256.
+Package/contribution sizes were identical across the 3 samples of each size.
+Every output stayed within its configured package/contribution limit.
+Combined size counts one package plus one contribution, not all distributed copies.
+
+EVIDENCE SCOPE
+Only six evidence files are prepared for version control.
+Existing application, test, tool, dependency and configuration files are unchanged.
+No generated private keys, profiles, plaintext fixtures or scratch directories
+are included in this evidence set. The source commit recorded in the results
+identifies the measured version, not the later commit that stores this evidence.
