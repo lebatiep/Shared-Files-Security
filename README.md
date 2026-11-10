@@ -1,82 +1,82 @@
-# Chia sẻ tệp bằng Shamir 2-trên-3
+# Shamir 2-of-3 Secure File Sharing
 
-Shared-Files-Security là ứng dụng desktop cục bộ dùng để chia quyền mở một tệp. Tiêp tạo gói cho ba người giữ phần khóa là Nhật Minh, Hoàng và Việt. Bất kỳ hai trong ba người có thể phối hợp mở gói, còn một phần riêng lẻ chưa đủ để khôi phục khóa.
+Shared-Files-Security is an offline desktop app for sharing an encrypted file among three designated key holders. In the demo, Tiêp creates a package for Nhật Minh, Hoàng, and Việt. Any two holders can work together to open it. One share alone is insufficient to recover the encryption key.
 
-[Tổng quan](#tổng-quan) · [Kiến trúc](#kiến-trúc) · [Mật mã](#mật-mã-và-định-dạng-gói) · [Cài đặt](#cài-đặt-và-khởi-chạy) · [Demo](#chạy-demo) · [Kiểm thử](#kiểm-thử) · [Giới hạn](#giới-hạn)
+[Overview](#overview) · [Architecture](#architecture) · [Cryptography](#cryptography-and-file-formats) · [Setup](#setup) · [Demo](#demo) · [Testing](#testing) · [Tools and benchmarks](#tools-and-benchmarks) · [Limitations](#limitations)
 
-## Tổng quan
+## Overview
 
-- **Tạo gói.** Người gửi chọn đúng ba liên hệ đã xác minh. Ứng dụng mã hóa tệp một lần, chia khóa AES thành ba phần, bọc mỗi phần cho một người giữ rồi ký gói.
-- **Góp một phần.** Một người giữ mở phần của mình bằng khóa riêng và xuất tệp đóng góp được bọc cho người giữ sẽ mở gói.
-- **Mở và lưu.** Người mở dùng phần của mình và phần hợp lệ nhận được từ một người giữ khác. Ứng dụng kiểm tra hai phần thuộc cùng gói, khôi phục khóa AES và hỏi nơi lưu sau khi giải mã thành công.
+- **Create a package.** The sender selects three verified contacts. The app encrypts the file once, splits the AES key into three shares, wraps each share for its holder, and signs the package.
+- **Contribute a share.** A holder unlocks their own share with their private key and exports it encrypted for another designated holder.
+- **Open and save.** The recipient combines their own share with the contribution. The app checks that both shares belong to the same package, reconstructs the AES key, and prompts for a save location after successful decryption.
 
-| Tệp | Ai dùng và dùng để làm gì? |
+| File | Purpose |
 |---|---|
-| `.sfile2` | Tiêp chuyển cùng một gói cho cả ba người giữ. Gói chứa tệp mã hóa và ba phần khóa được bọc riêng. |
-| `.sapproval` | Hoàng xuất phần đóng góp dành cho Nhật Minh. Nhật Minh dùng tệp này với chính gói mà Hoàng đã chọn. |
-| JSON khóa công khai | Dùng khi nhập liên hệ và đối chiếu hai dấu vân tay. |
-| `.sbackup` | Bản sao lưu hồ sơ có khóa riêng được mã hóa. Chủ hồ sơ lưu giữ để khôi phục khi cần. |
+| `.sfile2` | Tiêp sends a copy of the same package to all three holders. It contains the encrypted file and three individually wrapped key shares. |
+| `.sapproval` | Hoàng exports a share encrypted for Nhật Minh. Nhật Minh uses it with the exact package Hoàng selected. |
+| Public-key JSON | Users exchange these files to import contacts and verify both key fingerprints. |
+| `.sbackup` | An encrypted backup of a profile's private keys. The profile owner keeps it for recovery. |
 
-Ứng dụng nhận tệp gốc tối đa **10 MiB**, gồm tệp rỗng, dữ liệu nhị phân và tên Unicode. Gói ngoài tối đa **15 MiB**, phần đóng góp tối đa **2 KiB**. Người dùng tự chuyển các tệp qua email, chat hoặc USB.
+Source files may be up to **10 MiB**, including empty files, binary files, and files with Unicode names. The package limit is **15 MiB**, and the contribution limit is **2 KiB**. Users transfer the files through an existing channel such as email, chat, or USB.
 
-## Kiến trúc
+## Architecture
 
 ```mermaid
 flowchart TD
-    UI["Giao diện Tkinter"] --> S["Điều phối gửi, góp và mở"]
-    S --> T["Shamir 2-trên-3 và định dạng gói"]
-    S --> K["Hồ sơ và danh bạ đã xác minh"]
+    UI["Tkinter interface"] --> S["Create, contribute, and open workflows"]
+    S --> T["Shamir 2-of-3 and package formats"]
+    S --> K["Profiles and verified contacts"]
     S --> C["AES-GCM, RSA-OAEP, RSA-PSS"]
-    S --> F["Đọc, lưu tệp và ghi lịch sử"]
+    S --> F["File storage and history"]
 ```
 
-| Thành phần | Vai trò |
+| Component | Responsibility |
 |---|---|
-| [Giao diện](secure_share/ui/app.py) và [khởi tạo](secure_share/application.py) | Ba tab **Khóa của tôi**, **Người liên hệ** và **Chia sẻ 2-trên-3**. Tác vụ dài chạy ở luồng nền. |
-| [Điều phối](secure_share/service.py) | Giữ một tác vụ tại một thời điểm và giữ dữ liệu đã giải mã trong bộ nhớ cho đến khi người dùng lưu hoặc hủy. |
-| [Shamir](secure_share/threshold.py) và [luồng Shamir](secure_share/threshold_workflow.py) | Chia và ghép khóa, đọc gói, xác thực người gửi, ràng buộc phần đóng góp với gói và người mở. |
-| [Mật mã](secure_share/crypto_ops.py) | Các phép mã hóa, bọc khóa và xác minh chữ ký qua thư viện `cryptography`. |
-| [Hồ sơ](secure_share/keys.py) và [danh bạ](secure_share/trust_store.py) | Tạo hai cặp khóa riêng cho mã hóa và ký, lưu khóa riêng có mật khẩu, xác minh liên hệ, đổi khóa và sao lưu hồ sơ. |
-| [Lưu trữ](secure_share/storage.py) và [lịch sử](secure_share/history.py) | Đọc có giới hạn, lưu qua tệp tạm, phục hồi sau gián đoạn và cảnh báo gói đã lưu. |
+| [Interface](secure_share/ui/app.py) and [startup](secure_share/application.py) | Build the profile, contact, and threshold-sharing tabs. Long-running tasks run in the background. |
+| [Workflow service](secure_share/service.py) | Runs one operation at a time and holds decrypted content in memory until the user saves or cancels. |
+| [Shamir](secure_share/threshold.py) and [threshold workflow](secure_share/threshold_workflow.py) | Split and reconstruct keys, parse packages, verify senders, and bind contributions to the package and recipient. |
+| [Cryptography](secure_share/crypto_ops.py) | Encrypts content, wraps shares, and signs or verifies packages using `cryptography`. |
+| [Profiles](secure_share/keys.py) and [contacts](secure_share/trust_store.py) | Manage separate encryption and signing key pairs, password-protected private keys, contact verification, key rotation, and backups. |
+| [Storage](secure_share/storage.py) and [history](secure_share/history.py) | Enforce input limits, save through temporary files, recover from interrupted writes, and warn when a package has already been saved. |
 
-Trên Windows, hồ sơ, danh bạ, lịch sử và thông tin phục hồi tệp tạm nằm trong `%LOCALAPPDATA%\Shared-Files-Security`. Gói trao đổi, bản sao lưu và bản rõ khôi phục nằm ở vị trí người dùng chọn.
+On Windows, the app stores profiles, contacts, history, and temporary-file recovery records in `%LOCALAPPDATA%\Shared-Files-Security`. Users choose where to save packages, backups, and recovered files.
 
-## Mật mã và định dạng gói
+## Cryptography and file formats
 
-| Cơ chế | Vai trò trong luồng |
+| Mechanism | Role |
 |---|---|
-| **AES-256-GCM** | Mã hóa tên tệp và nội dung bằng khóa ngẫu nhiên 32 byte. Tiêu đề và ba khối phần chia đã bọc được ràng buộc với nội dung qua AAD. |
-| **Shamir 2-trên-3** | Khóa AES là giá trị của một đường thẳng tại điểm 0 trên trường modulo `2^521 - 1`. Ba phần chia là ba điểm khác nhau. Hai điểm đủ để nội suy lại khóa. |
-| **RSA-3072 OAEP / SHA-256** | Bọc từng phần cho một người giữ. Khi góp phần, người giữ bọc lại phần của mình cho người sẽ mở. |
-| **RSA-3072 PSS / SHA-256** | Ký tiêu đề, các phần đã bọc, nonce và nội dung mã hóa. Người nhận kiểm chữ ký của người gửi trước khi mở phần chia. |
-| **Fingerprint SHA-256** | Đối chiếu khóa công khai theo hai vai trò. Dấu vân tay được tính trên DER SPKI và hiển thị bằng 64 ký tự hex. |
+| **AES-256-GCM** | Encrypts the filename and file contents with a random 32-byte key. Additional authenticated data (AAD) binds the header and the three wrapped shares to the ciphertext. |
+| **Shamir 2-of-3** | The AES key is the value at zero of a line over the finite field modulo `2^521 - 1`. Each share is a distinct point on that line. Any two points can reconstruct the key by interpolation. |
+| **RSA-3072 OAEP with SHA-256** | Wraps each share for its holder. A contributor uses it again to wrap their share for the holder who will open the package. |
+| **RSA-3072 PSS with SHA-256** | Signs the header, wrapped shares, nonce, and ciphertext. Each holder verifies the sender's signature before unlocking a share. |
+| **SHA-256 fingerprints** | Identify public keys during verification. Each fingerprint is a 64-character hexadecimal SHA-256 digest of the key's DER-encoded SubjectPublicKeyInfo. |
 
-`.sfile2` có tiêu đề ghi danh sách khóa người giữ theo thứ tự và giá trị băm của từng phần. Chữ ký bảo vệ tiêu đề và toàn bộ các khối mã hóa. Khi nhận `.sapproval`, ứng dụng kiểm tra đúng gói, đúng khóa nhận và đúng phần chia đã ghi trong tiêu đề, rồi mới nội suy và kiểm tag GCM. [Bài báo gốc của Adi Shamir](https://publications.csail.mit.edu/lcs/pubs/pdf/MIT-LCS-TM-134.pdf)
+The `.sfile2` header lists the holders' keys in order and contains a commitment to each share. The signature covers the header and all encrypted fields. When a recipient loads an `.sapproval` file, the app checks the package and recipient bindings and verifies the shares against the signed commitments. It then reconstructs the AES key and verifies the GCM tag before releasing the file contents. [Shamir's original paper](https://publications.csail.mit.edu/lcs/pubs/pdf/MIT-LCS-TM-134.pdf)
 
 ```mermaid
 sequenceDiagram
     participant T as Tiêp
     participant H as Hoàng
     participant N as Nhật Minh
-    T->>T: Mã hóa tệp, chia khóa và ký gói
-    T->>H: Gửi .sfile2
-    T->>N: Gửi cùng gói .sfile2
-    Note over T,N: Việt cũng nhận một bản sao của cùng gói
-    H->>H: Kiểm chữ ký Tiêp và mở phần của Hoàng
-    H->>N: Gửi .sapproval đã bọc cho Nhật Minh
-    N->>N: Dùng hai phần hợp lệ để khôi phục khóa AES
-    N->>N: Kiểm tag, giải mã và chọn nơi lưu
+    T->>T: Encrypt the file, split the key, and sign the package
+    T->>H: Send the .sfile2 package
+    T->>N: Send the same .sfile2 package
+    Note over T,N: Việt receives another copy of the same package
+    H->>H: Verify Tiêp's signature and unlock Hoàng's share
+    H->>N: Send an .sapproval encrypted for Nhật Minh
+    N->>N: Reconstruct the AES key from two verified shares
+    N->>N: Check the tag, decrypt, and choose where to save
 ```
 
-## Cài đặt và khởi chạy
+## Setup
 
-Môi trường demo trên Windows cần **Python 3.12 có Tkinter**. Từ thư mục mã nguồn của bản Shamir, mở ứng dụng bằng:
+The Windows demo requires **Python 3.12 with Tkinter**. Run the launcher from the repository root.
 
 ```powershell
 .\start.cmd
 ```
 
-Lệnh này tạo `.venv` nếu cần, cài thư viện và mở app. Có thể chạy từng bước để kiểm tra môi trường:
+The launcher creates `.venv` if needed, installs the dependencies, and starts the app. You can also run setup manually.
 
 ```powershell
 py -3.12 -m venv .venv
@@ -86,35 +86,37 @@ $py = (Resolve-Path .\.venv\Scripts\python.exe).Path
 & $py -m secure_share
 ```
 
-## Chạy demo
+## Demo
 
-1. **Tạo hồ sơ.** Tạo bốn hồ sơ hiển thị là **Tiêp**, **Nhật Minh**, **Hoàng** và **Việt**. Có thể đặt mã hồ sơ lần lượt là `tiep-demo`, `nhat-minh-demo`, `hoang-demo`, `viet-demo`. Mỗi hồ sơ dùng mật khẩu riêng từ 12 ký tự.
-2. **Xác minh.** Mỗi hồ sơ xuất JSON ở **Khóa của tôi → Xuất khóa công khai**. Tiêp nhập và xác minh cả ba người giữ. Mỗi người giữ xác minh Tiêp. Hoàng xác minh thêm Nhật Minh để có thể gửi phần góp cho Nhật Minh. Khi xác minh, nhập fingerprint mã hóa trước và fingerprint chữ ký sau, dựa vào thông tin đã đối chiếu với chủ khóa.
-3. **Tạo gói.** Tiêp vào **Chia sẻ 2-trên-3**, chọn Nhật Minh, Hoàng, Việt và bấm **Chọn tệp và tạo gói**. Chọn tệp nguồn, lưu `.sfile2`, xác nhận rồi nhập mật khẩu của mình.
-4. **Góp phần.** Hoàng chọn Nhật Minh trong mục **Góp một phần khóa**, bấm **Chọn gói và xuất .sapproval** rồi dùng mật khẩu của mình. Chuyển tệp `.sapproval` cho Nhật Minh.
-5. **Mở và kiểm tra.** Nhật Minh bấm **Chọn .sfile2 và .sapproval**, nhập mật khẩu của mình rồi lưu bản rõ. Dùng công cụ so tệp để đối chiếu byte và SHA-256.
-6. **Thử thiếu phần hoặc đổi người góp.** Chỉ có gói và khóa riêng của Nhật Minh thì chưa đủ. Nếu Việt góp phần dành cho Nhật Minh, Nhật Minh có thể mở với cặp này. Tệp góp phần sai gói hoặc sai đích sẽ bị từ chối.
+The app uses Vietnamese labels. The steps below retain those labels so they match the interface.
 
-Demo tự động tạo hồ sơ và tệp giả trong thư mục tạm, rồi kiểm tra một người giữ chưa đủ và cả ba cặp hợp lệ đều khôi phục đúng tệp.
+1. **Create profiles.** Create profiles for **Tiêp**, **Nhật Minh**, **Hoàng**, and **Việt**. Suggested profile IDs are `tiep-demo`, `nhat-minh-demo`, `hoang-demo`, and `viet-demo`. Use a separate passphrase of at least 12 characters for each profile.
+2. **Verify contacts.** Each profile exports a public-key JSON file under **Khóa của tôi → Xuất khóa công khai**. Tiêp imports and verifies all three holders. Each holder verifies Tiêp, and Hoàng also verifies Nhật Minh. Compare each fingerprint with the key owner through an independent channel, then enter the encryption fingerprint followed by the signing fingerprint.
+3. **Create the package.** As Tiêp, open **Chia sẻ 2-trên-3**, select Nhật Minh, Hoàng, and Việt, and click **Chọn tệp và tạo gói**. Select a source file and a destination for the `.sfile2` package, confirm the holders, and enter Tiêp's passphrase.
+4. **Contribute a share.** As Hoàng, select Nhật Minh under **Góp một phần khóa** and click **Chọn gói và xuất .sapproval**. Select Tiêp's package and a destination, confirm the recipient, and enter Hoàng's passphrase. Send the resulting `.sapproval` file to Nhật Minh.
+5. **Open and verify.** As Nhật Minh, click **Chọn .sfile2 và .sapproval**, select both files, enter Nhật Minh's passphrase, and save the recovered file. Use the comparison tool to check the bytes and SHA-256 against the original.
+6. **Try another pair.** Nhật Minh's key alone is insufficient. After verifying Nhật Minh's keys, Việt can export a contribution for Nhật Minh so that pair can also open the file. The app rejects contributions for a different package or recipient.
+
+The automated demo creates temporary profiles and sample files. It checks that one holder alone is blocked and that all three valid pairs recover the original file.
 
 ```powershell
 $py = (Resolve-Path .\.venv\Scripts\python.exe).Path
 & $py -m tools.demo
 ```
 
-## Kiểm thử
+## Testing
 
 ```powershell
-# Chạy riêng Shamir, gồm kiểm thử luồng qua Tkinter
+# Run the Shamir tests, including the Tkinter workflow
 & $py -m pytest -q tests/unit/test_threshold.py tests/unit/test_ui_threshold.py tests/integration/test_threshold_workflow.py tests/integration/test_threshold_tk.py
 
-# Chạy toàn bộ suite và xuất kết quả theo mã nghiệm thu
+# Run the full suite and write a report by acceptance case
 & $py -m tools.case_report --run --json .test-results/cases.json
 ```
 
-Bộ Shamir kiểm tra cả ba cặp và cả hai chiều góp phần, thiếu phần, trùng người giữ, sai gói, sai đích, chữ ký sai, khóa cũ sau khi đổi, biên 10 MiB và các thao tác lưu hoặc hủy. Lượt kiểm thử đầy đủ cũng chạy 60 mã hồi quy của giao thức trước để bảo vệ những phần dùng chung như khóa, danh bạ, mật mã và lưu trữ.
+The Shamir suite covers all three pairs in both contribution directions, missing shares, duplicate holders, mismatched packages or recipients, invalid signatures, retained keys after rotation, the 10 MiB boundary, and saving or cancelling. The full suite also runs 60 regression cases for the earlier protocol to check shared components such as keys, contacts, cryptography, and storage.
 
-## Công cụ và benchmark
+## Tools and benchmarks
 
 ```powershell
 & $py -m tools.make_test_data --out .test-results/demo-inputs
@@ -122,21 +124,23 @@ Bộ Shamir kiểm tra cả ba cặp và cả hai chiều góp phần, thiếu p
 & $py -m tools.benchmark --repeats 3
 ```
 
-`compare_files` dùng sau khi đã lưu tệp khôi phục vào đường dẫn tương ứng. Benchmark chạy luồng 2-trên-3 thật trên dữ liệu giả, đo riêng **tạo gói**, **góp phần** và **mở rồi lưu**, sau đó đối chiếu hash bản rõ với bản gốc.
+Run `compare_files` after saving the recovered file to the corresponding path. The benchmark runs the actual 2-of-3 workflow on synthetic data. It measures package creation, share contribution, and opening plus saving separately, then compares the SHA-256 of the recovered file with the original.
 
-## Giới hạn
+## Limitations
 
-- Danh tính gắn với khóa đã đối chiếu fingerprint. Nếu Tiêp xác minh nhầm khóa, phần chia sẽ được bọc cho chủ của khóa đó.
-- Ngưỡng tính theo hai phần hợp lệ từ hai khóa giữ khác nhau. Tệp đóng góp đã xuất có thể dùng lại với cùng gói và cùng khóa nhận.
-- Sau khi lưu bản rõ, người mở có thể sao chép tệp. Mật khẩu, khóa riêng và bản sao lưu do chủ hồ sơ tự giữ.
-- Đây là bản mẫu học tập. Dùng dữ liệu giả khi demo.
+- Identity depends on verifying the correct fingerprints. If Tiêp verifies the wrong key, the share is wrapped for the owner of that key.
+- The threshold requires valid shares from two distinct holder keys. An exported contribution can be reused for the same package and recipient key.
+- Once saved, the plaintext can be copied by the person who opened it. Each profile owner is responsible for their passphrase, private keys, and backup.
+- This is an educational project. Use synthetic data for demonstrations.
 
-## Thành viên
+## Team
 
-| Thành viên | Phần phụ trách |
-|---|---|
-| Tiệp | Điều phối luồng và tích hợp. |
-| Nhật | Hồ sơ, khóa và xác minh liên hệ. |
-| Hoàng | Mật mã và định dạng gói. |
-| Việt | Giao diện và lưu tệp. |
-| Quang | Kiểm thử, demo và benchmark. |
+| Member | Tasks | Deliverable |
+|---|---|---|
+| Tiệp | Coordinate integration, review changes across modules, and track issues before the demo. | A tested demo commit and a checklist of open issues and owners. |
+| Nhật | Maintain profiles, public-key exchange, fingerprint verification, key rotation, and backup recovery. | A walkthrough that shows how to verify a contact and open a package using a retained key after rotation. |
+| Hoàng | Maintain Shamir splitting and reconstruction, AES and RSA integration, and the package and contribution formats. | A protocol walkthrough explaining why two shares recover the key and how contributions are bound to the package and recipient. |
+| Việt | Maintain the Tkinter workflow and safe file saving. Check file selection, cancellation, and overwrite confirmation. | A working interface walkthrough from package creation through saving the recovered file. |
+| Quang | Own automated tests and benchmarks. Cover all three holder pairs, mismatched contributions, and the file-size boundary. | The acceptance JSON and benchmark results for the demo commit. |
+| Hiền Anh | Lead manual acceptance and demo rehearsal. Run the workflow with separate profiles on two machines, including a valid pair, a missing share, and a contribution sent to the wrong holder. | A step-by-step demo script, expected and observed results, and screenshots or a short recording using sample data. |
+| Vinh | Own setup and release checks. Verify the launcher on a clean Windows checkout, review the Windows and Ubuntu CI jobs, and document setup failures and fixes. | A reproducible setup checklist with the Python version, commands, and CI links for the demo commit. |
