@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import os
 from pathlib import Path
 import re
@@ -25,6 +25,7 @@ from .config import (
 )
 from .errors import ErrorCode, ShareError
 from .models import (
+    ContributionRequest,
     ErrorInfo,
     KeyRole,
     OperationResult,
@@ -35,6 +36,8 @@ from .models import (
     RawEnvelope,
     ReceiveRequest,
     SendRequest,
+    ThresholdReceiveRequest,
+    ThresholdSendRequest,
     TrustStatus,
     WarningCode,
     WriteReceipt,
@@ -47,6 +50,7 @@ from .ports import (
     StoragePort,
     TrustProvider,
 )
+from .threshold_workflow import ThresholdOpened, ThresholdWorkflow
 
 
 @dataclass(frozen=True, slots=True)
@@ -76,6 +80,7 @@ class FileShareService:
         self._envelope = envelope
         self._storage = storage
         self._history = history
+        self._threshold = ThresholdWorkflow(keys=keys, trust=trust, crypto=crypto, envelope=envelope, storage=storage)
         self._lock = Lock()
         self._pending: _PendingReceive | None = None
 
@@ -351,50 +356,104 @@ class FileShareService:
             )
             stage = ProcessingStage.PAYLOAD
             payload = self._envelope.parse_payload(plaintext)
-            self._require_bytes(payload.data)
-            if not isinstance(payload.filename, str) or len(payload.data) > MAX_FILE_BYTES:
-                raise ShareError(ErrorCode.PAYLOAD_INVALID)
-
-            warnings: list[WarningCode] = []
-            try:
-                duplicate = self._history.has_seen(request.profile_id, package.header.transfer_id)
-                if type(duplicate) is not bool:
-                    raise ShareError(ErrorCode.HISTORY_INVALID)
-                if duplicate:
-                    warnings.append(WarningCode.DUPLICATE_TRANSFER)
-            except Exception:
-                duplicate = False
-                warnings.append(WarningCode.HISTORY_UNAVAILABLE)
-
-            prepared = PreparedReceive(
-                handle=secrets.token_urlsafe(32),
-                profile_id=request.profile_id,
-                transfer_id=package.header.transfer_id,
-                sender_name=sender.display_name,
-                sender_fingerprint=package.header.sender_sig_fp,
-                recipient_fingerprint=package.header.recipient_enc_fp,
-                filename=payload.filename,
-                byte_count=len(payload.data),
-                duplicate=duplicate,
-            )
-            self._pending = _PendingReceive(
-                metadata=prepared,
-                data=payload.data,
-                protected_paths=protected_paths,
-                warnings=tuple(warnings),
-            )
-            return OperationResult(
-                status=OperationStatus.PREPARED,
-                stage=stage,
-                transfer_id=prepared.transfer_id,
-                prepared=prepared,
-                sender_name=prepared.sender_name,
-                warnings=tuple(warnings),
+            return self._prepare_payload(
+                request.profile_id, package.header.transfer_id, sender.display_name,
+                package.header.sender_sig_fp, package.header.recipient_enc_fp, payload, protected_paths,
             )
         except ShareError as exc:
             return self._failed(exc.code, stage)
         except OSError:
             return self._failed(ErrorCode.READ_FAILED if stage is ProcessingStage.READ else ErrorCode.INTERNAL_ERROR, stage)
+        except Exception:
+            return self._failed(ErrorCode.INTERNAL_ERROR, stage)
+        finally:
+            self._lock.release()
+
+    def _prepare_payload(
+        self, profile_id, transfer_id, sender_name, sender_fingerprint, recipient_fingerprint, payload, protected_paths,
+    ):
+        self._require_bytes(payload.data)
+        if not isinstance(payload.filename, str) or len(payload.data) > MAX_FILE_BYTES:
+            raise ShareError(ErrorCode.PAYLOAD_INVALID)
+        warnings: list[WarningCode] = []
+        try:
+            duplicate = self._history.has_seen(profile_id, transfer_id)
+            if type(duplicate) is not bool:
+                raise ShareError(ErrorCode.HISTORY_INVALID)
+            if duplicate:
+                warnings.append(WarningCode.DUPLICATE_TRANSFER)
+        except Exception:
+            duplicate = False
+            warnings.append(WarningCode.HISTORY_UNAVAILABLE)
+
+        prepared = PreparedReceive(
+            handle=secrets.token_urlsafe(32),
+            profile_id=profile_id,
+            transfer_id=transfer_id,
+            sender_name=sender_name,
+            sender_fingerprint=sender_fingerprint,
+            recipient_fingerprint=recipient_fingerprint,
+            filename=payload.filename,
+            byte_count=len(payload.data),
+            duplicate=duplicate,
+        )
+        self._pending = _PendingReceive(prepared, payload.data, protected_paths, tuple(warnings))
+        return OperationResult(
+            status=OperationStatus.PREPARED,
+            stage=ProcessingStage.PAYLOAD,
+            transfer_id=transfer_id,
+            prepared=prepared,
+            sender_name=sender_name,
+            warnings=tuple(warnings),
+        )
+
+    def send_threshold(self, request: ThresholdSendRequest) -> OperationResult:
+        return self._run_threshold(request, ThresholdSendRequest, self._threshold.send, ("source_path", "destination_path"))
+
+    def export_contribution(self, request: ContributionRequest) -> OperationResult:
+        return self._run_threshold(request, ContributionRequest, self._threshold.contribute, ("package_path", "destination_path"))
+
+    def prepare_threshold_receive(self, request: ThresholdReceiveRequest) -> OperationResult:
+        return self._run_threshold(request, ThresholdReceiveRequest, self._threshold.open, ("package_path", "contribution_path"))
+
+    def _run_threshold(self, request, request_type, workflow, path_fields):
+        if not self._lock.acquire(blocking=False):
+            return self._failed(ErrorCode.BUSY, None)
+        stage = None
+        try:
+            if self._pending is not None:
+                return self._failed(ErrorCode.BUSY, None)
+            if not isinstance(request, request_type) or not isinstance(request.passphrase, bytes):
+                raise ShareError(ErrorCode.INVALID_REQUEST)
+            overwrite = getattr(request, "overwrite_confirmed", False)
+            if type(overwrite) is not bool:
+                raise ShareError(ErrorCode.INVALID_REQUEST)
+            paths = {name: self._path(getattr(request, name)) for name in path_fields}
+            request = replace(request, **paths)
+            result = workflow(request)
+            protected = tuple(self._path(path) for path in result.protected_paths)
+            if isinstance(result, ThresholdOpened):
+                stage = ProcessingStage.PAYLOAD
+                return self._prepare_payload(
+                    request.profile_id, result.transfer_id, result.sender_name, result.sender_fingerprint,
+                    result.recipient_fingerprint, result.payload, protected,
+                )
+            stage = ProcessingStage.SAVE
+            try:
+                receipt = self._storage.save_atomic(
+                    result.data, request.destination_path, overwrite_confirmed=overwrite, protected_paths=protected,
+                )
+                if not self._valid_receipt(receipt, request.destination_path, len(result.data)):
+                    return self._failed(ErrorCode.SAVE_STATE_UNKNOWN, stage)
+            except ShareError:
+                raise
+            except Exception:
+                return self._failed(ErrorCode.SAVE_STATE_UNKNOWN, stage)
+            return OperationResult(
+                status=OperationStatus.SUCCESS, stage=stage, transfer_id=result.transfer_id, receipt=receipt,
+            )
+        except ShareError as exc:
+            return self._failed(exc.code, stage)
         except Exception:
             return self._failed(ErrorCode.INTERNAL_ERROR, stage)
         finally:

@@ -146,6 +146,36 @@ class ReceiveRequest:
 
 
 @dataclass(frozen=True, slots=True)
+class ThresholdSendRequest:
+    profile_id: str
+    recipient_contact_ids: tuple[str, str, str]
+    source_path: Path = field(repr=False)
+    destination_path: Path = field(repr=False)
+    passphrase: bytes = field(repr=False)
+    overwrite_confirmed: bool = False
+    expected_recipient_fingerprints: tuple[tuple[str, str], ...] | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ContributionRequest:
+    profile_id: str
+    recipient_contact_id: str
+    package_path: Path = field(repr=False)
+    destination_path: Path = field(repr=False)
+    passphrase: bytes = field(repr=False)
+    overwrite_confirmed: bool = False
+    expected_recipient_fingerprint: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ThresholdReceiveRequest:
+    profile_id: str
+    package_path: Path = field(repr=False)
+    contribution_path: Path = field(repr=False)
+    passphrase: bytes = field(repr=False)
+
+
+@dataclass(frozen=True, slots=True)
 class ErrorInfo:
     code: ErrorCode
     stage: ProcessingStage | None

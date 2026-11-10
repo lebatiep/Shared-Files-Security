@@ -8,10 +8,21 @@ from tkinter import filedialog, messagebox, simpledialog, ttk
 
 from ..application import create_application
 from ..errors import ErrorCode, ShareError, safe_message
-from ..models import OperationStatus, ReceiveRequest, SendRequest, TrustStatus, WarningCode
+from ..models import (
+    ContributionRequest,
+    OperationStatus,
+    ReceiveRequest,
+    SendRequest,
+    ThresholdReceiveRequest,
+    ThresholdSendRequest,
+    TrustStatus,
+    WarningCode,
+)
 
 
 class App:
+    threshold_selectors: tuple[ttk.Combobox, ...] = ()
+
     def __init__(self, root, application):
         self.root = root
         self.app = application
@@ -69,11 +80,47 @@ class App:
         ttk.Separator(files_tab).pack(fill='x', pady=16)
         self.button(files_tab, 'Mở gói .sfile đã nhận', self.receive).pack(anchor='w', pady=12)
         ttk.Label(files_tab, text='Người gửi cũng phải được xác minh trong danh bạ của bạn.\nMật khẩu chỉ dùng mở khóa riêng; không gửi mật khẩu cho người nhận.', wraplength=730).pack(anchor='w', pady=8)
+        threshold_tab = ttk.Frame(tabs, padding=16)
+        tabs.add(threshold_tab, text='Chia sẻ 2-trên-3')
+        self.build_threshold_tab(threshold_tab)
         self.progress = ttk.Progressbar(outer, mode='indeterminate')
         self.progress.pack(fill='x')
         ttk.Label(outer, textvariable=self.status, wraplength=820).pack(anchor='w', pady=(8, 0))
         self.refresh()
         self.root.after(80, self.poll)
+
+    def build_threshold_tab(self, tab):
+        ttk.Label(
+            tab,
+            text='Gửi cùng gói .sfile2 cho cả ba người giữ. Một người giữ mở tệp bằng khóa riêng '
+                 'của mình và tệp .sapproval do một người giữ khác gửi cho họ.\n'
+                 'Người giữ cần xác minh người gửi gói. Người góp cần xác minh thêm người sẽ mở.',
+            wraplength=680,
+        ).pack(anchor='w', pady=(0, 8))
+        send = ttk.LabelFrame(tab, text='1. Tạo gói .sfile2', padding=8)
+        send.pack(fill='x', pady=(0, 6))
+        holders = ttk.Frame(send)
+        holders.pack(anchor='w')
+        selectors = []
+        for column in range(3):
+            ttk.Label(holders, text=f'Người giữ {column + 1}').grid(row=0, column=column, sticky='w')
+            selector = ttk.Combobox(holders, state='readonly', width=20)
+            selector.grid(row=1, column=column, padx=(0, 10), pady=(2, 0), sticky='w')
+            selectors.append(selector)
+        self.threshold_holders = tuple(selectors)
+        self.button(send, 'Chọn tệp và tạo gói', self.send_threshold).pack(anchor='w', pady=(6, 0))
+
+        contribute = ttk.LabelFrame(tab, text='2. Góp một phần khóa', padding=8)
+        contribute.pack(fill='x', pady=(0, 6))
+        ttk.Label(contribute, text='Người giữ sẽ mở gói').pack(side='left', padx=(0, 8))
+        self.contribution_recipient = ttk.Combobox(contribute, state='readonly', width=20)
+        self.contribution_recipient.pack(side='left', padx=(0, 8))
+        self.button(contribute, 'Chọn gói và xuất .sapproval', self.export_contribution).pack(side='left')
+        self.threshold_selectors = (*self.threshold_holders, self.contribution_recipient)
+
+        receive = ttk.LabelFrame(tab, text='3. Mở tệp', padding=8)
+        receive.pack(fill='x')
+        self.button(receive, 'Chọn .sfile2 và .sapproval', self.receive_threshold).pack(anchor='w')
 
     def button(self, parent, text, command):
         button = ttk.Button(parent, text=text, command=lambda: self.perform(command))
@@ -129,6 +176,8 @@ class App:
         state = 'disabled' if busy else 'readonly'
         self.profiles.configure(state=state)
         self.recipients.configure(state=state)
+        for selector in self.threshold_selectors:
+            selector.configure(state=state)
         if busy:
             self.progress.start(12)
             self.status.set('Đang xử lý…')
@@ -204,6 +253,10 @@ class App:
         self.recipients['values'] = recipients
         if contact_id in recipients:
             self.contact.set(contact_id)
+        for selector in self.threshold_selectors:
+            selected = selector.get() if self.recipient_profile == profile_id else ''
+            selector['values'] = recipients
+            selector.set(selected if selected in recipients else '')
         self.recipient_profile = profile_id
 
     def create_profile(self):
@@ -393,6 +446,106 @@ class App:
             return
         request = ReceiveRequest(profile, Path(package), password)
         self.run(lambda: self.app.service.prepare_receive(request), self.prepared)
+
+    def send_threshold(self):
+        profile = self.selected_profile()
+        holder_ids = tuple(selector.get() for selector in self.threshold_holders)
+        if not all(holder_ids) or len(set(holder_ids)) != 3:
+            raise ShareError(ErrorCode.INVALID_THRESHOLD_RECIPIENTS)
+        holders = tuple(self.app.trust.resolve_recipient(profile, contact_id) for contact_id in holder_ids)
+        fingerprints = tuple((holder.encryption_fingerprint, holder.signing_fingerprint) for holder in holders)
+        if len({fingerprint for pair in fingerprints for fingerprint in pair}) != 6:
+            raise ShareError(ErrorCode.INVALID_THRESHOLD_RECIPIENTS)
+        source = filedialog.askopenfilename(title='Chọn tệp nguồn', parent=self.root)
+        if not source:
+            self.cancel()
+            return
+        selected = self.choose_destination(f'{secrets.token_hex(16)}.sfile2', extension='.sfile2')
+        if selected is None:
+            self.cancel()
+            return
+        destination, overwrite = selected
+        identities = '\n\n'.join(
+            f'{holder.display_name} ({holder.contact_id})\n'
+            f'Mã hóa: {holder.encryption_fingerprint}\nChữ ký: {holder.signing_fingerprint}'
+            for holder in holders
+        )
+        if not messagebox.askyesno(
+            'Xác nhận ba người giữ',
+            f'{identities}\n\nTệp nguồn: {source}\nGói sẽ lưu tại: {destination}\n\nTạo gói cho ba người này?',
+            default=messagebox.NO, parent=self.root,
+        ):
+            self.cancel()
+            return
+        password = self.password()
+        if password is None:
+            self.cancel()
+            return
+        request = ThresholdSendRequest(
+            profile, holder_ids, Path(source), destination, password,
+            overwrite_confirmed=overwrite, expected_recipient_fingerprints=fingerprints,
+        )
+        self.run(lambda: self.app.service.send_threshold(request), self.result)
+
+    def select_threshold_package(self):
+        return filedialog.askopenfilename(
+            title='Chọn gói .sfile2', parent=self.root,
+            filetypes=[('Gói 2-trên-3', '*.sfile2'), ('Tất cả', '*.*')],
+        )
+
+    def export_contribution(self):
+        profile, contact_id = self.selected_profile(), self.contribution_recipient.get()
+        if not contact_id:
+            self.status.set('Chọn người giữ sẽ mở gói trong danh sách liên hệ đã xác minh.')
+            return
+        recipient = self.app.trust.resolve_recipient(profile, contact_id)
+        package = self.select_threshold_package()
+        if not package:
+            self.cancel()
+            return
+        selected = self.choose_destination(f'{secrets.token_hex(16)}.sapproval', extension='.sapproval')
+        if selected is None:
+            self.cancel()
+            return
+        destination, overwrite = selected
+        if not messagebox.askyesno(
+            'Xác nhận người nhận phần đóng góp',
+            f'{recipient.display_name} ({recipient.contact_id})\n'
+            f'Dấu vân tay khóa mã hóa:\n{recipient.encryption_fingerprint}\n\n'
+            f'Gói: {package}\nPhần đóng góp sẽ lưu tại: {destination}\n\nXuất phần đóng góp cho người này?',
+            default=messagebox.NO, parent=self.root,
+        ):
+            self.cancel()
+            return
+        password = self.password()
+        if password is None:
+            self.cancel()
+            return
+        request = ContributionRequest(
+            profile, contact_id, Path(package), destination, password,
+            overwrite_confirmed=overwrite, expected_recipient_fingerprint=recipient.encryption_fingerprint,
+        )
+        self.run(lambda: self.app.service.export_contribution(request), self.result)
+
+    def receive_threshold(self):
+        profile = self.selected_profile()
+        package = self.select_threshold_package()
+        if not package:
+            self.cancel()
+            return
+        contribution = filedialog.askopenfilename(
+            title='Chọn phần đóng góp gửi cho bạn', parent=self.root,
+            filetypes=[('Phần đóng góp', '*.sapproval'), ('Tất cả', '*.*')],
+        )
+        if not contribution:
+            self.cancel()
+            return
+        password = self.password()
+        if password is None:
+            self.cancel()
+            return
+        request = ThresholdReceiveRequest(profile, Path(package), Path(contribution), password)
+        self.run(lambda: self.app.service.prepare_threshold_receive(request), self.prepared)
 
     def prepared(self, result):
         if result.status is not OperationStatus.PREPARED:

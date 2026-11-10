@@ -22,6 +22,8 @@ runtime/
 *.p12
 *.pfx
 *.sfile
+*.sfile2
+*.sapproval
 *.sbackup
 tests/generated/
 inputs/local/
