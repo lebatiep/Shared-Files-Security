@@ -42,11 +42,9 @@ def window():
 def test_threshold_selectors_show_only_verified_contacts_and_clear_on_profile_change(window):
     window.profile = Mock()
     window.profile.get.return_value = 'alice'
-    window.recipient_profile = 'alice'
-    window.contact = Mock()
+    window.contacts_profile = 'alice'
     window.contacts = Mock()
     window.contacts.get_children.return_value = ()
-    window.recipients = {}
     window.identity = Mock()
     window.app.trust.list_contacts.return_value += [holder('eve', '1', '2', status=TrustStatus.UNVERIFIED)]
     window.threshold_holders[0].get.return_value = 'eve'
@@ -68,7 +66,6 @@ def test_threshold_selectors_show_only_verified_contacts_and_clear_on_profile_ch
 def test_threshold_selectors_are_disabled_while_worker_runs(window):
     window.buttons = [Mock()]
     window.profiles = Mock()
-    window.recipients = Mock()
     window.progress = Mock()
 
     window.set_busy(True)

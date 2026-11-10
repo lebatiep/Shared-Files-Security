@@ -5,24 +5,24 @@ Bản nháp theo kế hoạch nhóm. Mỗi người tự điền nội dung ph�
 | Slide | Nội dung | Người chuẩn bị |
 |---|---|---|
 | 1 | Tên đề tài, thành viên | Tiệp |
-| 2 | Vấn đề: gửi tệp kèm mật khẩu qua cùng kênh | Tiệp |
-| 3 | Mục tiêu, phạm vi, vai Alice – Bob – Mallory | Tiệp |
+| 2 | Bài toán chia quyền mở tệp giữa ba người giữ | Tiệp |
+| 3 | Tiêp gửi gói cho Nhật Minh, Hoàng và Việt | Tiệp |
 | 4 | Hai cặp khóa theo vai trò (mã hóa, ký) | Nhật |
 | 5 | Fingerprint và trạng thái tin cậy; đối chiếu độc lập | Nhật |
-| 6 | Hệ lai: AES-256-GCM cho nội dung, RSA-OAEP bọc khóa | Hoàng |
-| 7 | Gói `.sfile`: H, W, N, C, S; framing; AAD và dữ liệu ký | Hoàng |
-| 8 | Thứ tự kiểm tra khi nhận; vì sao PSS trước GCM | Hoàng |
+| 6 | Chia khóa AES bằng Shamir và nội suy từ hai điểm | Hoàng |
+| 7 | Gói `.sfile2`, ba phần đã bọc bằng RSA-OAEP và chữ ký RSA-PSS | Hoàng |
+| 8 | Ràng buộc `.sapproval` với đúng gói và đúng khóa người mở | Hoàng |
 | 9 | Giao diện: ba tab, xác minh người liên hệ | Việt |
-| 10 | Gửi và nhận thành công; so byte và hash; hủy lưu | Việt |
-| 11 | Các ca lỗi đại diện: sai người nhận, sửa gói, người gửi chưa tin, tệp 10 MiB + 1 | Quang |
+| 10 | Tạo gói, góp phần, mở và so byte cùng SHA-256 | Việt |
+| 11 | Ca thiếu phần, phần sai gói, sai đích và gói bị sửa | Quang |
 | 12 | Kết quả kiểm thử: số ca đã chạy, đạt, chưa đạt; số đo (nếu có) | Quang |
-| 13 | Giới hạn: chuyển tiếp bản rõ, không thu hồi, không forward secrecy, tin cậy thủ công, mật mã tự cài chưa kiểm toán | Quang, nhận nội dung cả nhóm |
+| 13 | Giới hạn của xác minh khóa, dùng lại phần góp và chuyển tiếp bản rõ | Quang, nhận nội dung cả nhóm |
 | 14 | Kết luận, đóng góp, hướng mở rộng có điều kiện | Tiệp |
 
 ## Người nào cũng cần trả lời được
 
-Vì sao AES mã hóa tệp còn RSA chỉ bọc khóa? Vì sao vẫn cần chữ ký khi đã có GCM? Fingerprint gắn danh tính thế nào? Vì sao sửa ciphertext thường dừng ở PSS? Mất khóa thì sao? Người nhận có chuyển tiếp được không? Mỗi người học cả luồng, không chỉ phần mình viết.
+Vì sao hai phần chia khôi phục được khóa AES? Vì sao mỗi phần cần được bọc riêng? Chữ ký ràng buộc danh sách người giữ với gói thế nào? Nếu một người vắng mặt thì cặp nào còn mở được? Điều gì xảy ra nếu có bản sao của phần đóng góp?
 
 ## Phân vai trình bày và demo
 
-Tiệp mở đầu 1–2 phút; Nhật thiết lập tin cậy và đối chiếu fingerprint đúng/sai 2 phút; Hoàng giải thích AES/OAEP/PSS và vì sao tách hai cặp khóa 2 phút; Việt gửi/nhận qua giao diện và so byte 3 phút; Quang cho Mallory mở/sửa/giả gói, fixture sâu, kết quả và giới hạn 3–4 phút. Không trình diễn cả 60 ca trực tiếp: chọn ca đại diện, phần còn lại có bằng chứng và bảng trạng thái. Vì AES tự cài chậm, demo trực tiếp dùng tệp nhỏ.
+Tiệp mở đầu với bài toán quyền mở theo ngưỡng. Nhật trình bày cách đối chiếu fingerprint trước khi tạo gói. Hoàng vẽ đường thẳng Shamir và giải thích hai phần chia. Việt thao tác trên giao diện với kịch bản Tiêp tạo gói, Hoàng góp phần cho Nhật Minh, rồi Nhật Minh mở và đối chiếu tệp. Quang chạy các ca từ chối và trình bày kết quả kiểm thử. Dùng tệp giả nhỏ để các bước dễ theo dõi.

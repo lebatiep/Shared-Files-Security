@@ -16,16 +16,16 @@ passphrase mạnh. Kênh truyền gói (USB, ứng dụng nhắn tin) được c
 
 ## 2. Kẻ tấn công và mức ngăn chặn
 
-Mallory có thể đọc, giữ, sửa, ghép, phát lại và tự tạo gói. Mallory không có
-khóa riêng của Alice hay Bob, trừ các ca giới hạn ở mục 4.
+Quang có thể đọc, giữ, sửa, ghép, phát lại và tự tạo gói. Quang không có
+khóa riêng của Tiêp hay Nhật Minh, trừ các ca giới hạn ở mục 4.
 
-| Hành vi của Mallory | Cơ chế chặn | Bước dừng | Ca / test liên quan |
+| Hành vi của Quang | Cơ chế chặn | Bước dừng | Ca / test liên quan |
 | --- | --- | --- | --- |
 | Giữ bản sao gói, đọc nội dung | AES-256-GCM; khóa AES chỉ mở được bằng khóa riêng của người nhận (RSA-OAEP) | `UNWRAP` | A06, `test_wrong_recipient_cannot_open` |
 | Sửa một byte của H, W, N hoặc C | PSS trên M gồm đủ H, W, N, C | `SIGNATURE` | A02, A03; `test_tampering_any_part_breaks_signature`, `test_signature_protects_each_field` |
 | Lật byte chữ ký S | PSS thất bại | `SIGNATURE` | A02 |
 | Ghép các phần của hai gói hợp lệ | Chữ ký ràng buộc cả bốn phần | `SIGNATURE` | A05 |
-| Tạo gói mới bằng public key Bob, tự xưng Alice | Chữ ký phải khớp khóa ký Alice đã ghim; header tự khai không phải nguồn tin cậy | `TRUST`/`SIGNATURE` | A04 (service và trust của Nhật/Tiệp) |
+| Tạo gói mới bằng public key Nhật Minh, tự xưng Tiêp | Chữ ký phải khớp khóa ký Tiêp đã ghim; header tự khai không phải nguồn tin cậy | `TRUST`/`SIGNATURE` | A04 (service và trust của Nhật/Tiệp) |
 | Gửi JSON sai cấu trúc, trường trùng/lạ, Base64 lỗi, gói quá lớn | Parser nghiêm ngặt, kiểm giới hạn trước khi giải mã | `PARSE` | P01–P07; `tests/unit/test_envelope.py` |
 | Nhét tên tệp độc hại vào metadata | `filename` chỉ là gợi ý; storage (Việt) quyết định đường dẫn lưu | `SAVE` | R04, R05 (storage) |
 | Gửi lại gói cũ | Chỉ cảnh báo trùng `transfer_id`; không chặn tuyệt đối | lịch sử (Tiệp) | L04 |
@@ -52,7 +52,7 @@ năng của kẻ không có khóa ký.
 
 1. **Người nhận chuyển tiếp bản rõ** được. Không có thu hồi, DRM hay hết hạn offline (L05).
 2. **Người gửi chọn nhầm liên hệ hợp lệ** thì gói mở được bởi người đó; giao diện xác nhận chỉ giảm sai sót (S09).
-3. **Xác minh fingerprint sai hoặc bỏ qua** có thể dẫn tới gửi bí mật cho Mallory, ghim sai khóa (L06).
+3. **Xác minh fingerprint sai hoặc bỏ qua** có thể dẫn tới gửi bí mật cho Quang, ghim sai khóa (L06).
 4. **Lộ khóa**: lộ khóa nhận mở được các gói cũ đã thu; lộ khóa ký cho phép tạo gói giả được tin khi pin còn hiệu lực. Không có forward secrecy.
 5. **Không có dấu thời gian tin cậy**: không kết luận gói được ký trước hay sau sự cố khi vô hiệu hóa một liên hệ (L02).
 6. **Lộ siêu dữ liệu**: gói lộ dung lượng gần đúng, hai fingerprint và mối liên hệ giữa các lần trao đổi.

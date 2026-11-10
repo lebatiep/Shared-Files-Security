@@ -3,9 +3,10 @@ import time
 import pytest
 
 from secure_share.ui import app as ui
-from tools.demo_threshold import HOLDERS, prepare_demo
+from tools.demo_threshold import HOLDERS, SENDER, prepare_demo
 
 
+@pytest.mark.case("R01")
 def test_threshold_tab_create_contribute_and_receive(tmp_path, monkeypatch):
     try:
         root = ui.tk.Tk()
@@ -17,7 +18,7 @@ def test_threshold_tab_create_contribute_and_receive(tmp_path, monkeypatch):
     source = tmp_path / "Hồ sơ.bin"
     source.write_bytes(b"threshold Tk roundtrip\x00\xff")
     package = tmp_path / "survey.sfile2"
-    contribution = tmp_path / "carol-to-bob.sapproval"
+    contribution = tmp_path / "hoang-to-nhat-minh.sapproval"
     output = tmp_path / "recovered.bin"
     open_paths = iter((source, package, package, contribution))
     save_paths = iter((package, contribution, output))
@@ -38,7 +39,18 @@ def test_threshold_tab_create_contribute_and_receive(tmp_path, monkeypatch):
         assert not errors
 
     try:
-        window.profile.set("alice")
+        notebook, = (
+            widget for frame in root.winfo_children() for widget in frame.winfo_children()
+            if isinstance(widget, ui.ttk.Notebook)
+        )
+        assert {notebook.tab(tab, "text") for tab in notebook.tabs()} == {
+            "Khóa của tôi", "Người liên hệ", "Chia sẻ 2-trên-3",
+        }
+        assert notebook.tab(notebook.select(), "text") == "Chia sẻ 2-trên-3"
+        for profile_id, expected_name in zip((SENDER, *HOLDERS), ("Tiêp", "Nhật Minh", "Hoàng", "Việt"), strict=True):
+            assert application.keys.get_profile(profile_id).display_name == expected_name
+
+        window.profile.set(SENDER)
         window.refresh_contacts()
         for selector, holder in zip(window.threshold_holders, HOLDERS, strict=True):
             selector.set(holder)
@@ -46,14 +58,15 @@ def test_threshold_tab_create_contribute_and_receive(tmp_path, monkeypatch):
         wait()
         assert package.is_file()
 
-        window.profile.set("carol")
+        opener, contributor = HOLDERS[:2]
+        window.profile.set(contributor)
         window.refresh_contacts()
-        window.contribution_recipient.set("bob")
+        window.contribution_recipient.set(opener)
         window.export_contribution()
         wait()
         assert contribution.is_file()
 
-        window.profile.set("bob")
+        window.profile.set(opener)
         window.refresh_contacts()
         window.receive_threshold()
         wait()
