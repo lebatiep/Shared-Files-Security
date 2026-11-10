@@ -135,12 +135,12 @@ Run `compare_files` after saving the recovered file to the corresponding path. T
 
 ## Team
 
-| Member | Area of responsibility |
-|---|---|
-| Tiệp | Workflow coordination and integration. |
-| Nhật | Profiles, keys, and contact verification. |
-| Hoàng | Cryptography and package formats. |
-| Việt | Interface and file storage. |
-| Quang | Testing, demonstrations, and benchmarks. |
-| Hiền Anh | — |
-| Vinh | — |
+| Member | Tasks | Deliverable |
+|---|---|---|
+| Tiệp | Coordinate integration, review changes across modules, and track issues before the demo. | A tested demo commit and a checklist of open issues and owners. |
+| Nhật | Maintain profiles, public-key exchange, fingerprint verification, key rotation, and backup recovery. | A walkthrough that shows how to verify a contact and open a package using a retained key after rotation. |
+| Hoàng | Maintain Shamir splitting and reconstruction, AES and RSA integration, and the package and contribution formats. | A protocol walkthrough explaining why two shares recover the key and how contributions are bound to the package and recipient. |
+| Việt | Maintain the Tkinter workflow and safe file saving. Check file selection, cancellation, and overwrite confirmation. | A working interface walkthrough from package creation through saving the recovered file. |
+| Quang | Own automated tests and benchmarks. Cover all three holder pairs, mismatched contributions, and the file-size boundary. | The acceptance JSON and benchmark results for the demo commit. |
+| Hiền Anh | Lead manual acceptance and demo rehearsal. Run the workflow with separate profiles on two machines, including a valid pair, a missing share, and a contribution sent to the wrong holder. | A step-by-step demo script, expected and observed results, and screenshots or a short recording using sample data. |
+| Vinh | Own setup and release checks. Verify the launcher on a clean Windows checkout, review the Windows and Ubuntu CI jobs, and document setup failures and fixes. | A reproducible setup checklist with the Python version, commands, and CI links for the demo commit. |
