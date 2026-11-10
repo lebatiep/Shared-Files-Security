@@ -11,8 +11,6 @@ from ..errors import ErrorCode, ShareError, safe_message
 from ..models import (
     ContributionRequest,
     OperationStatus,
-    ReceiveRequest,
-    SendRequest,
     ThresholdReceiveRequest,
     ThresholdSendRequest,
     TrustStatus,
@@ -21,8 +19,6 @@ from ..models import (
 
 
 class App:
-    threshold_selectors: tuple[ttk.Combobox, ...] = ()
-
     def __init__(self, root, application):
         self.root = root
         self.app = application
@@ -31,17 +27,16 @@ class App:
         self.busy = False
         self.closed = False
         self.buttons = []
-        self.recipient_profile = None
+        self.contacts_profile = None
         self.profile = tk.StringVar()
-        self.contact = tk.StringVar()
-        self.status = tk.StringVar(value='Tạo hồ sơ, trao đổi khóa công khai và xác minh trước khi gửi tệp.')
-        root.title('Shared Files Security')
+        self.status = tk.StringVar(value='Tạo hồ sơ và xác minh người liên hệ để chia sẻ tệp 2-trên-3.')
+        root.title('Shared Files Security · Shamir 2-trên-3')
         root.geometry('900x670')
         root.minsize(780, 570)
         root.protocol('WM_DELETE_WINDOW', self.close)
         outer = ttk.Frame(root, padding=20)
         outer.pack(fill='both', expand=True)
-        ttk.Label(outer, text='Chia sẻ tệp an toàn', font=('Segoe UI', 21, 'bold')).pack(anchor='w')
+        ttk.Label(outer, text='Chia sẻ tệp Shamir 2-trên-3', font=('Segoe UI', 21, 'bold')).pack(anchor='w')
         ttk.Label(outer, text='Tệp tối đa 10 MiB • Khóa riêng được bảo vệ bằng mật khẩu trên máy của bạn').pack(anchor='w', pady=(4, 18))
         line = ttk.Frame(outer)
         line.pack(fill='x')
@@ -52,12 +47,14 @@ class App:
         self.button(line, 'Tạo hồ sơ', self.create_profile).pack(side='left', padx=8)
         tabs = ttk.Notebook(outer)
         tabs.pack(fill='both', expand=True, pady=18)
+        threshold_tab = ttk.Frame(tabs, padding=16)
         profile_tab = ttk.Frame(tabs, padding=16)
         contacts_tab = ttk.Frame(tabs, padding=16)
-        files_tab = ttk.Frame(tabs, padding=16)
         tabs.add(profile_tab, text='Khóa của tôi')
         tabs.add(contacts_tab, text='Người liên hệ')
-        tabs.add(files_tab, text='Gửi / nhận tệp')
+        tabs.add(threshold_tab, text='Chia sẻ 2-trên-3')
+        tabs.select(threshold_tab)
+        self.build_threshold_tab(threshold_tab)
         self.identity = tk.Text(profile_tab, height=10, wrap='word', font=('Consolas', 11), state='disabled')
         self.identity.pack(fill='both', expand=True)
         self.button(profile_tab, 'Xuất khóa công khai', self.export_keys).pack(side='left', pady=12)
@@ -73,16 +70,6 @@ class App:
         contact_actions.pack(fill='x')
         for label, action in [('Nhập khóa', self.import_contact), ('Xem dấu vân tay', self.show_contact), ('Xác minh', self.verify_contact), ('Vô hiệu hóa', self.disable_contact)]:
             self.button(contact_actions, label, action).pack(side='left', padx=(0, 8))
-        ttk.Label(files_tab, text='Chọn người nhận đã xác minh').pack(anchor='w')
-        self.recipients = ttk.Combobox(files_tab, textvariable=self.contact, state='readonly', width=45)
-        self.recipients.pack(anchor='w', pady=10)
-        self.button(files_tab, 'Chọn tệp và mã hóa để gửi', self.send).pack(anchor='w', pady=12)
-        ttk.Separator(files_tab).pack(fill='x', pady=16)
-        self.button(files_tab, 'Mở gói .sfile đã nhận', self.receive).pack(anchor='w', pady=12)
-        ttk.Label(files_tab, text='Người gửi cũng phải được xác minh trong danh bạ của bạn.\nMật khẩu chỉ dùng mở khóa riêng; không gửi mật khẩu cho người nhận.', wraplength=730).pack(anchor='w', pady=8)
-        threshold_tab = ttk.Frame(tabs, padding=16)
-        tabs.add(threshold_tab, text='Chia sẻ 2-trên-3')
-        self.build_threshold_tab(threshold_tab)
         self.progress = ttk.Progressbar(outer, mode='indeterminate')
         self.progress.pack(fill='x')
         ttk.Label(outer, textvariable=self.status, wraplength=820).pack(anchor='w', pady=(8, 0))
@@ -175,7 +162,6 @@ class App:
             button.state(['disabled' if busy else '!disabled'])
         state = 'disabled' if busy else 'readonly'
         self.profiles.configure(state=state)
-        self.recipients.configure(state=state)
         for selector in self.threshold_selectors:
             selector.configure(state=state)
         if busy:
@@ -234,9 +220,6 @@ class App:
         self.contacts.delete(*self.contacts.get_children())
         entries = []
         profile_id = self.profile.get()
-        contact_id = self.contact.get() if self.recipient_profile == profile_id else ''
-        self.recipients['values'] = ()
-        self.contact.set('')
         text = 'Chưa có hồ sơ. Chọn “Tạo hồ sơ” để bắt đầu.'
         if profile_id:
             profile = self.app.keys.get_profile(profile_id)
@@ -249,15 +232,12 @@ class App:
         labels = {TrustStatus.VERIFIED: 'Đã xác minh', TrustStatus.UNVERIFIED: 'Chưa xác minh', TrustStatus.DISABLED: 'Đã vô hiệu hóa'}
         for entry in entries:
             self.contacts.insert('', 'end', iid=entry.contact_id, values=(f'{entry.display_name} ({entry.contact_id})', labels[entry.status]))
-        recipients = [c.contact_id for c in entries if c.status is TrustStatus.VERIFIED]
-        self.recipients['values'] = recipients
-        if contact_id in recipients:
-            self.contact.set(contact_id)
+        verified_ids = [entry.contact_id for entry in entries if entry.status is TrustStatus.VERIFIED]
         for selector in self.threshold_selectors:
-            selected = selector.get() if self.recipient_profile == profile_id else ''
-            selector['values'] = recipients
-            selector.set(selected if selected in recipients else '')
-        self.recipient_profile = profile_id
+            selected = selector.get() if self.contacts_profile == profile_id else ''
+            selector['values'] = verified_ids
+            selector.set(selected if selected in verified_ids else '')
+        self.contacts_profile = profile_id
 
     def create_profile(self):
         profile_id = simpledialog.askstring('Tạo hồ sơ', 'Mã hồ sơ: chữ thường không dấu, số, _ hoặc -', parent=self.root)
@@ -397,55 +377,6 @@ class App:
                 default=messagebox.NO, parent=self.root,
             ):
                 return destination, overwrite
-
-    def send(self):
-        profile, contact_id = self.selected_profile(), self.contact.get()
-        if not contact_id:
-            self.status.set('Chọn người nhận đã xác minh trước khi gửi.')
-            return
-        recipient = self.app.trust.resolve_recipient(profile, contact_id)
-        source = filedialog.askopenfilename(parent=self.root)
-        if not source:
-            self.cancel()
-            return
-        selected = self.choose_destination(f'{secrets.token_hex(16)}.sfile', extension='.sfile')
-        if selected is None:
-            self.cancel()
-            return
-        destination, overwrite = selected
-        if not messagebox.askyesno(
-            'Xác nhận người nhận',
-            f'Mã người nhận: {recipient.contact_id}\nTên hiển thị: {recipient.display_name}\n'
-            f'Dấu vân tay khóa mã hóa:\n{recipient.encryption_fingerprint}\n'
-            f'Dấu vân tay khóa ký:\n{recipient.signing_fingerprint}\n\n'
-            f'Tệp nguồn: {source}\nGói sẽ lưu tại: {destination}\n\nMã hóa tệp cho người này?',
-            default=messagebox.NO, parent=self.root,
-        ):
-            self.cancel()
-            return
-        password = self.password()
-        if password is None:
-            self.cancel()
-            return
-        request = SendRequest(
-            profile, contact_id, Path(source), destination, password,
-            overwrite_confirmed=overwrite,
-            expected_recipient_fingerprints=(recipient.encryption_fingerprint, recipient.signing_fingerprint),
-        )
-        self.run(lambda: self.app.service.send_file(request), self.result)
-
-    def receive(self):
-        profile = self.selected_profile()
-        package = filedialog.askopenfilename(parent=self.root, filetypes=[('Gói bảo mật', '*.sfile'), ('Tất cả', '*.*')])
-        if not package:
-            self.cancel()
-            return
-        password = self.password()
-        if password is None:
-            self.cancel()
-            return
-        request = ReceiveRequest(profile, Path(package), password)
-        self.run(lambda: self.app.service.prepare_receive(request), self.prepared)
 
     def send_threshold(self):
         profile = self.selected_profile()

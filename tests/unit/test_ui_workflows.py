@@ -1,5 +1,4 @@
 import queue
-import re
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -10,9 +9,6 @@ from secure_share.models import (
     OperationResult,
     OperationStatus,
     PreparedReceive,
-    ProfileSummary,
-    TrustedContact,
-    TrustStatus,
     WarningCode,
     WriteReceipt,
 )
@@ -27,116 +23,8 @@ def window():
     window.status = Mock()
     window.busy = False
     window.closed = False
-    window.selected_profile = Mock(return_value='alice')
-    window.contact = Mock()
-    window.contact.get.return_value = 'mallory'
-    window.password = Mock(return_value=b'local secret')
-    window.app = SimpleNamespace(
-        trust=Mock(),
-        service=Mock(),
-    )
-    window.app.trust.resolve_recipient.return_value = TrustedContact(
-        'alice', 'mallory', 'Người nhận khác', 'e' * 64, 'a' * 64,
-        object(), object(), TrustStatus.VERIFIED,
-    )
+    window.app = SimpleNamespace(service=Mock())
     return window
-
-
-@pytest.mark.case('S09')
-def test_send_has_no_recipient_selected_on_load_or_profile_change(window):
-    window.profile = Mock()
-    window.profile.get.return_value = 'alice'
-    window.recipient_profile = None
-    window.contacts = Mock()
-    window.contacts.get_children.return_value = []
-    window.identity = Mock()
-    window.recipients = {}
-    window.app.keys = Mock()
-    window.app.keys.get_profile.return_value = ProfileSummary('alice', 'Alice', 'e' * 64, 'a' * 64)
-    window.app.trust.list_contacts.return_value = [window.app.trust.resolve_recipient.return_value]
-
-    window.refresh_contacts()
-    assert window.recipients['values'] == ['mallory']
-    window.contact.set.assert_called_once_with('')
-
-    window.contact.set.reset_mock()
-    window.refresh_contacts()
-    assert window.contact.set.call_args.args == ('mallory',)
-
-    window.profile.get.return_value = 'bob'
-    window.app.keys.get_profile.return_value = ProfileSummary('bob', 'Bob', 'e' * 64, 'a' * 64)
-    window.contact.set.reset_mock()
-    window.refresh_contacts()
-    window.contact.set.assert_called_once_with('')
-
-
-@pytest.mark.case('S09')
-def test_send_confirms_selected_id_and_keys_with_opaque_package_name(window, tmp_path, monkeypatch):
-    source = tmp_path / 'private-survey.xlsx'
-    destination = tmp_path / 'chosen.sfile'
-    monkeypatch.setattr(ui.filedialog, 'askopenfilename', lambda **kwargs: str(source))
-    save_dialog = Mock(return_value=str(destination))
-    monkeypatch.setattr(ui.filedialog, 'asksaveasfilename', save_dialog)
-    confirm = Mock(return_value=True)
-    monkeypatch.setattr(ui.messagebox, 'askyesno', confirm)
-    window.run = Mock(side_effect=lambda work, callback: work())
-
-    window.send()
-
-    window.app.trust.resolve_recipient.assert_called_once_with('alice', 'mallory')
-    suggestion = save_dialog.call_args.kwargs['initialfile']
-    assert re.fullmatch(r'[0-9a-f]{32}\.sfile', suggestion)
-    assert source.name not in suggestion
-    notice = confirm.call_args.args[1]
-    assert all(text in notice for text in ('mallory', 'Người nhận khác', 'e' * 64, 'a' * 64, str(source), str(destination)))
-    assert confirm.call_args.kwargs['default'] == ui.messagebox.NO
-    request = window.app.service.send_file.call_args.args[0]
-    assert request.recipient_contact_id == 'mallory'
-    assert request.expected_recipient_fingerprints == ('e' * 64, 'a' * 64)
-    assert request.destination_path == destination
-
-
-@pytest.mark.case('O01')
-@pytest.mark.parametrize('stop_at', ['recipient', 'source', 'destination', 'confirmation', 'password'])
-def test_send_cancellation_starts_no_work(window, tmp_path, monkeypatch, stop_at):
-    source = tmp_path / 'data.txt'
-    destination = tmp_path / 'out.sfile'
-    if stop_at == 'recipient':
-        window.contact.get.return_value = ''
-    open_dialog = Mock(return_value='' if stop_at == 'source' else str(source))
-    monkeypatch.setattr(ui.filedialog, 'askopenfilename', open_dialog)
-    monkeypatch.setattr(ui.filedialog, 'asksaveasfilename', lambda **kwargs: '' if stop_at == 'destination' else str(destination))
-    monkeypatch.setattr(ui.messagebox, 'askyesno', lambda *args, **kwargs: stop_at != 'confirmation')
-    if stop_at == 'password':
-        window.password.return_value = None
-    window.run = Mock()
-
-    window.send()
-
-    window.run.assert_not_called()
-    window.app.service.send_file.assert_not_called()
-    assert not destination.exists()
-    assert not window.busy
-    if stop_at == 'recipient':
-        open_dialog.assert_not_called()
-        assert 'Chọn người nhận' in window.status.set.call_args.args[0]
-    else:
-        window.status.set.assert_called_once_with('Đã hủy thao tác.')
-    assert window.password.call_count == (stop_at == 'password')
-
-
-@pytest.mark.case('O01')
-@pytest.mark.parametrize('package', ['', 'received.sfile'])
-def test_receive_cancel_before_prepare(window, monkeypatch, package):
-    monkeypatch.setattr(ui.filedialog, 'askopenfilename', lambda **kwargs: package)
-    window.password.return_value = None
-    window.run = Mock()
-
-    window.receive()
-
-    window.run.assert_not_called()
-    window.status.set.assert_called_once_with('Đã hủy thao tác.')
-    assert window.password.call_count == bool(package)
 
 
 @pytest.fixture
@@ -203,7 +91,7 @@ def test_worker_failure_is_sanitized_and_releases_controls(window, monkeypatch):
     window.buttons = [Mock()]
     window.progress = Mock()
     window.profiles = Mock()
-    window.recipients = Mock()
+    window.threshold_selectors = (Mock(),)
     window.results = queue.Queue()
     window.executor = Mock()
     show_error = Mock()
@@ -213,7 +101,7 @@ def test_worker_failure_is_sanitized_and_releases_controls(window, monkeypatch):
 
     window.run(work, callback)
     assert window.busy
-    window.recipients.configure.assert_called_once_with(state='disabled')
+    window.profiles.configure.assert_called_once_with(state='disabled')
     blocked = Mock()
     window.perform(blocked)
     blocked.assert_not_called()
@@ -222,7 +110,7 @@ def test_worker_failure_is_sanitized_and_releases_controls(window, monkeypatch):
     window.poll()
 
     assert not window.busy
-    assert window.recipients.configure.call_args.kwargs == {'state': 'readonly'}
+    assert window.profiles.configure.call_args.kwargs == {'state': 'readonly'}
     callback.assert_not_called()
     window.app.service.close.assert_called_once_with()
     notice = show_error.call_args.args[1]

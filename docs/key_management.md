@@ -12,7 +12,7 @@ Mật khẩu: tối thiểu 12 ký tự, không chỉ toàn khoảng trắng, t�
 
 Fingerprint là SHA-256 của DER SubjectPublicKeyInfo của khóa công khai, viết bằng 64 ký tự hex. Mỗi hồ sơ có hai fingerprint (mã hóa và ký). Chỉ `keys.py` tính fingerprint; mọi nơi khác dùng kết quả đó.
 
-## Thiết lập tin cậy lần đầu (Alice và Bob)
+## Thiết lập tin cậy lần đầu (Tiêp và Nhật Minh)
 
 1. Mỗi người tạo hồ sơ trên máy của mình và xuất public bundle.
 2. Hai người trao đổi bundle (qua USB hay ứng dụng nhắn tin đều được; bundle không bí mật).

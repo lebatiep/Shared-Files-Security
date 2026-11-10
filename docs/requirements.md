@@ -1,5 +1,7 @@
 # Phạm vi và tiêu chí đạt
 
+Tài liệu này ghi lại phạm vi SFILE v1 dùng cho bộ kiểm thử hồi quy. Luồng Shamir hiện tại được mô tả trong [README](../README.md).
+
 Tóm tắt từ proposal 1.0 (09/11/2026) và kế hoạch nhóm 1.1. Trạng thái các tiêu chí do người chạy độc lập ghi vào bảng kết quả; tài liệu này không khẳng định tiêu chí nào đã đạt.
 
 ## Vấn đề
@@ -10,7 +12,7 @@ Chia sẻ tệp qua kênh không đáng tin cậy (USB, ứng dụng nhắn tin)
 
 | Hạng mục | Nội dung |
 |---|---|
-| Vai trò | Alice gửi, Bob nhận, Mallory thử đọc/sửa/gửi giả; ba hồ sơ và thư mục tách biệt |
+| Vai trò | Tiêp gửi, Nhật Minh nhận, Quang thử đọc/sửa/gửi giả; ba hồ sơ và thư mục tách biệt |
 | Dữ liệu | Mọi định dạng xử lý như byte, từ 0 đến 10.485.760 byte; không tự mở hoặc chạy tệp sau giải mã |
 | Chức năng | Hồ sơ và khóa; liên hệ tin cậy; mã hóa và xuất gói; kiểm tra và giải mã; trạng thái kết quả |
 | Gói | Một tệp `.sfile`, không kèm khóa AES thô, khóa riêng hay mật khẩu |

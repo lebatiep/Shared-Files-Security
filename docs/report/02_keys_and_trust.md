@@ -4,7 +4,7 @@
 
 ## 2.1. Vấn đề
 
-Mã hóa công khai tự nó không cho biết public key thuộc về ai: ai cũng có thể tạo gói mới bằng public key của người nhận, và ai cũng có thể đưa cho bạn một public key mang tên người khác. Nếu người gửi nhận nhầm khóa của Mallory thì bí mật đến tay Mallory dù mọi thuật toán đều đúng. Vì vậy cần gắn khóa với con người bằng một bước đối chiếu độc lập, và ghi nhớ kết quả cục bộ.
+Mã hóa công khai tự nó không cho biết public key thuộc về ai: ai cũng có thể tạo gói mới bằng public key của người nhận, và ai cũng có thể đưa cho bạn một public key mang tên người khác. Nếu người gửi nhận nhầm khóa của Quang thì bí mật đến tay Quang dù mọi thuật toán đều đúng. Vì vậy cần gắn khóa với con người bằng một bước đối chiếu độc lập, và ghi nhớ kết quả cục bộ.
 
 ## 2.2. Thiết kế
 
@@ -44,7 +44,7 @@ Test dùng hồ sơ tạm và khóa test. Các ca chưa có test gắn: I03 (m�
 
 ## 2.4. Giới hạn
 
-- **Tin cậy thủ công, không phải PKI.** Đúng hay sai phụ thuộc vào việc người dùng đối chiếu đúng. Xác minh nhầm hoặc bỏ qua có thể gửi bí mật cho Mallory (ca L06).
+- **Tin cậy thủ công, không phải PKI.** Đúng hay sai phụ thuộc vào việc người dùng đối chiếu đúng. Xác minh nhầm hoặc bỏ qua có thể gửi bí mật cho Quang (ca L06).
 - **Không có dấu thời gian tin cậy.** Vô hiệu hóa một liên hệ chặn từ thời điểm đó theo chính sách cục bộ; không kết luận gói cũ được ký trước hay sau sự cố (ca L02).
 - **Mất khóa hoặc mật khẩu không có cách bỏ qua.** Chỉ phục hồi khi còn bản sao lưu và mật khẩu (ca L03).
 - **Đổi khóa không thu hồi** gói cũ và không ngăn người nhận chuyển tiếp bản rõ.

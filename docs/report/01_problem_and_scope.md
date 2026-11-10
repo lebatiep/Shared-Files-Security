@@ -1,5 +1,7 @@
 # Chương 1. Vấn đề, mục tiêu, phạm vi và tổ chức
 
+Bản nháp dưới đây ghi phạm vi v1 ban đầu. Xem luồng Shamir hiện tại trong [README](../../README.md).
+
 **Bản nháp** do Hoàng soạn từ proposal, kế hoạch nhóm và mã hiện tại để Tiệp (chủ chương) đọc, sửa và nhận. Chưa ai duyệt. Người đối chiếu bằng chứng theo kế hoạch: Quang. Chương này chưa nêu kết quả nghiệm thu vì 60 ca kiểm thử chưa có trạng thái do người chạy độc lập ghi.
 
 ## 1.1. Vấn đề
@@ -15,7 +17,7 @@ Làm thế nào để chia sẻ một tệp qua kênh truyền không đáng tin
 
 ## 1.3. Phạm vi
 
-Ứng dụng desktop cục bộ (Python, Tkinter), một định dạng gói `.sfile`, một người nhận mỗi gói, tệp 0 đến 10.485.760 byte, không máy chủ. Alice gửi, Bob nhận, Mallory đóng vai người thử đọc, sửa hay gửi giả. Cơ chế: AES-256-GCM, RSA-3072 OAEP, RSA-3072 PSS, hai cặp khóa theo vai trò, ghim fingerprint trong danh bạ cục bộ.
+Ứng dụng desktop cục bộ (Python, Tkinter), một định dạng gói `.sfile`, một người nhận mỗi gói, tệp 0 đến 10.485.760 byte, không máy chủ. Tiêp gửi, Nhật Minh nhận, Quang đóng vai người thử đọc, sửa hay gửi giả. Cơ chế: AES-256-GCM, RSA-3072 OAEP, RSA-3072 PSS, hai cặp khóa theo vai trò, ghim fingerprint trong danh bạ cục bộ.
 
 Ngoài phạm vi: nhiều người nhận, tệp lớn theo luồng, máy chủ phân phối khóa, chứng thư PKI, thu hồi gói, xác nhận đã đọc. Chi tiết ở `docs/requirements.md`.
 

@@ -110,7 +110,7 @@ Thông tin trong H trước PSS chỉ dùng để chọn khóa và kiểm schema
 liệu đã xác thực. Sửa C, W, N hoặc H thông thường dừng ở PSS. Để kiểm tra các tầng
 sâu hơn (OAEP, độ dài khóa AES, GCM, AAD, payload), bộ test tạo gói lỗi rồi ký lại
 bằng khóa ký **của test**. Đó là fixture của người kiểm thử, không phải khả năng giả
-chữ ký của Mallory.
+chữ ký của Quang.
 
 ## 3.6. Kiểm thử đã chạy
 

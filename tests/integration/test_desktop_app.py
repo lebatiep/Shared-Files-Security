@@ -4,7 +4,6 @@ import json
 import os
 from pathlib import Path
 import shutil
-import time
 
 import pytest
 
@@ -431,50 +430,6 @@ def test_hardlink_alias_to_private_key_is_protected(app, tmp_path):
     with pytest.raises(ShareError) as error:
         app.storage.save_atomic(b'overwrite', alias, overwrite_confirmed=True, protected_paths=app.keys.protected_paths('bob'))
     assert error.value.code is ErrorCode.PROTECTED_PATH
-
-
-@pytest.mark.case("R01")
-def test_tk_send_and_receive_with_real_workers(app, tmp_path, monkeypatch):
-    import tkinter as tk
-    from secure_share.ui import app as ui
-    try:
-        root = tk.Tk()
-    except tk.TclError:
-        pytest.skip('Tk display is not available')
-    root.withdraw()
-    window = ui.App(root, app)
-    errors = []
-    monkeypatch.setattr(ui.messagebox, 'showerror', lambda *args, **kwargs: errors.append(args))
-    monkeypatch.setattr(ui.messagebox, 'askyesno', lambda *args, **kwargs: True)
-    monkeypatch.setattr(ui.messagebox, 'showwarning', lambda *args, **kwargs: None)
-    monkeypatch.setattr(window, 'password', lambda **kwargs: PASSWORD)
-    source, package, output = tmp_path / 'test.txt', tmp_path / 'ui.sfile', tmp_path / 'restored.txt'
-    source.write_bytes(b'Tk real crypto roundtrip')
-    paths = iter([str(source), str(package)])
-    destinations = iter([str(package), str(output)])
-    monkeypatch.setattr(ui.filedialog, 'askopenfilename', lambda **kwargs: next(paths))
-    monkeypatch.setattr(ui.filedialog, 'asksaveasfilename', lambda **kwargs: next(destinations))
-    def wait():
-        deadline = time.monotonic() + 15
-        while window.busy and time.monotonic() < deadline:
-            root.update()
-            time.sleep(.01)
-        assert not window.busy
-    try:
-        window.profile.set('alice')
-        window.refresh_contacts()
-        window.contact.set('bob')
-        window.send()
-        wait()
-        assert package.exists(), errors
-        window.profile.set('bob')
-        window.refresh_contacts()
-        window.receive()
-        wait()
-        assert output.read_bytes() == source.read_bytes(), errors
-        assert not errors
-    finally:
-        window.close()
 
 
 def _zip_bytes():
