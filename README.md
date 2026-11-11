@@ -1,6 +1,6 @@
 # Shared-Files-Security
 
-Shared-Files-Security is an offline desktop app for sharing an encrypted file among three designated key holders. In the demo, Tiêp creates a package for Nhật Minh, Hoàng, and Việt. Any two holders can work together to open it. One share alone is insufficient to recover the encryption key.
+Shared-Files-Security is an offline desktop app for sharing an encrypted file among three designated key holders. In the demo, Actor 1 creates a package for Actors 2, 3, and 4. Any two holders can work together to open it. One share alone is insufficient to recover the encryption key.
 
 [Overview](#overview) · [Architecture](#architecture) · [Cryptography](#cryptography-and-file-formats) · [Setup](#setup) · [Demo](#demo) · [Testing](#testing) · [Tools and benchmarks](#tools-and-benchmarks) · [Limitations](#limitations)
 
@@ -12,8 +12,8 @@ Shared-Files-Security is an offline desktop app for sharing an encrypted file am
 
 | File | Purpose |
 |---|---|
-| `.sfile2` | Tiêp sends a copy of the same package to all three holders. It contains the encrypted file and three individually wrapped key shares. |
-| `.sapproval` | Hoàng exports a share encrypted for Nhật Minh. Nhật Minh uses it with the exact package Hoàng selected. |
+| `.sfile2` | Actor 1 sends a copy of the same package to Actors 2, 3, and 4. It contains the encrypted file and three individually wrapped key shares. |
+| `.sapproval` | Actor 2 exports a share encrypted for Actor 3. Actor 3 uses it with the exact package Actor 2 selected. |
 | Public-key JSON | Users exchange these files to import contacts and verify both key fingerprints. |
 | `.sbackup` | An encrypted backup of a profile's private keys. The profile owner keeps it for recovery. |
 
@@ -55,17 +55,18 @@ The `.sfile2` header lists the holders' keys in order and contains a commitment 
 
 ```mermaid
 sequenceDiagram
-    participant T as Tiêp
-    participant H as Hoàng
-    participant N as Nhật Minh
-    T->>T: Encrypt the file, split the key, and sign the package
-    T->>H: Send the .sfile2 package
-    T->>N: Send the same .sfile2 package
-    Note over T,N: Việt receives another copy of the same package
-    H->>H: Verify Tiêp's signature and unlock Hoàng's share
-    H->>N: Send an .sapproval encrypted for Nhật Minh
-    N->>N: Reconstruct the AES key from two verified shares
-    N->>N: Check the tag, decrypt, and choose where to save
+    participant A1 as Actor 1
+    participant A2 as Actor 2
+    participant A3 as Actor 3
+    participant A4 as Actor 4
+    A1->>A1: Encrypt the file, split the key, and sign the package
+    A1->>A2: Send the .sfile2 package
+    A1->>A3: Send the same .sfile2 package
+    A1->>A4: Send another copy of the .sfile2 package
+    A2->>A2: Verify Actor 1's signature and unlock own share
+    A2->>A3: Send an .sapproval encrypted for Actor 3
+    A3->>A3: Reconstruct the AES key from two verified shares
+    A3->>A3: Check the tag, decrypt, and choose where to save
 ```
 
 ## Setup
@@ -90,12 +91,12 @@ $py = (Resolve-Path .\.venv\Scripts\python.exe).Path
 
 The app uses Vietnamese labels. The steps below retain those labels so they match the interface.
 
-1. **Create profiles.** Create profiles for **Tiêp**, **Nhật Minh**, **Hoàng**, and **Việt**. Suggested profile IDs are `tiep-demo`, `nhat-minh-demo`, `hoang-demo`, and `viet-demo`. Use a separate passphrase of at least 12 characters for each profile.
-2. **Verify contacts.** Each profile exports a public-key JSON file under **Khóa của tôi → Xuất khóa công khai**. Tiêp imports and verifies all three holders. Each holder verifies Tiêp, and Hoàng also verifies Nhật Minh. Compare each fingerprint with the key owner through an independent channel, then enter the encryption fingerprint followed by the signing fingerprint.
-3. **Create the package.** As Tiêp, open **Chia sẻ 2-trên-3**, select Nhật Minh, Hoàng, and Việt, and click **Chọn tệp và tạo gói**. Select a source file and a destination for the `.sfile2` package, confirm the holders, and enter Tiêp's passphrase.
-4. **Contribute a share.** As Hoàng, select Nhật Minh under **Góp một phần khóa** and click **Chọn gói và xuất .sapproval**. Select Tiêp's package and a destination, confirm the recipient, and enter Hoàng's passphrase. Send the resulting `.sapproval` file to Nhật Minh.
-5. **Open and verify.** As Nhật Minh, click **Chọn .sfile2 và .sapproval**, select both files, enter Nhật Minh's passphrase, and save the recovered file. Use the comparison tool to check the bytes and SHA-256 against the original.
-6. **Try another pair.** Nhật Minh's key alone is insufficient. After verifying Nhật Minh's keys, Việt can export a contribution for Nhật Minh so that pair can also open the file. The app rejects contributions for a different package or recipient.
+1. **Create profiles.** Create profiles for **Actor 1**, **Actor 2**, **Actor 3**, and **Actor 4**. Suggested profile IDs are `actor-1-demo`, `actor-2-demo`, `actor-3-demo`, and `actor-4-demo`. Use a separate passphrase of at least 12 characters for each profile.
+2. **Verify contacts.** Each profile exports a public-key JSON file under **Khóa của tôi → Xuất khóa công khai**. Actor 1 imports and verifies all three holders. Each holder verifies Actor 1, and Actor 2 also verifies Actor 3. Compare each fingerprint with the key owner through an independent channel, then enter the encryption fingerprint followed by the signing fingerprint.
+3. **Create the package.** As Actor 1, open **Chia sẻ 2-trên-3**, select Actors 2, 3, and 4, and click **Chọn tệp và tạo gói**. Select a source file and a destination for the `.sfile2` package, confirm the holders, and enter Actor 1's passphrase.
+4. **Contribute a share.** As Actor 2, select Actor 3 under **Góp một phần khóa** and click **Chọn gói và xuất .sapproval**. Select Actor 1's package and a destination, confirm the recipient, and enter Actor 2's passphrase. Send the resulting `.sapproval` file to Actor 3.
+5. **Open and verify.** As Actor 3, click **Chọn .sfile2 và .sapproval**, select both files, enter Actor 3's passphrase, and save the recovered file. Use the comparison tool to check the bytes and SHA-256 against the original.
+6. **Try another pair.** Actor 3's key alone is insufficient. After verifying Actor 3's keys, Actor 4 can export a contribution for Actor 3 so that pair can also open the file. The app rejects contributions for a different package or recipient.
 
 The automated demo creates temporary profiles and sample files. It checks that one holder alone is blocked and that all three valid pairs recover the original file.
 
@@ -128,7 +129,7 @@ Run `compare_files` after saving the recovered file to the corresponding path. T
 
 ## Limitations
 
-- Identity depends on verifying the correct fingerprints. If Tiêp verifies the wrong key, the share is wrapped for the owner of that key.
+- Identity depends on verifying the correct fingerprints. If Actor 1 verifies the wrong key, the share is wrapped for the owner of that key.
 - The threshold requires valid shares from two distinct holder keys. An exported contribution can be reused for the same package and recipient key.
 - Once saved, the plaintext can be copied by the person who opened it. Each profile owner is responsible for their passphrase, private keys, and backup.
 - This is an educational project. Use synthetic data for demonstrations.
