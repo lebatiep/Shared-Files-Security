@@ -34,6 +34,7 @@ from secure_share.threshold import (
 
 
 TRANSFER_ID = "a" * 32
+SPEC_FIELD_PRIME = 2**521 - 1
 
 
 @pytest.mark.parametrize("secret", [bytes(32), bytes(range(32)), b"\xff" * 32])
@@ -50,6 +51,35 @@ def test_every_distinct_pair_recovers_exact_key(secret, slope, monkeypatch):
     for left, right in combinations(shares, 2):
         assert combine_shares((left, right)) == secret
         assert combine_shares([right, left]) == secret
+
+
+@pytest.mark.parametrize(
+    ("slope", "expected_values"),
+    [
+        pytest.param(3, (8, 11, 14), id="ordinary"),
+        pytest.param(SPEC_FIELD_PRIME - 2, (3, 1, SPEC_FIELD_PRIME - 1), id="modular-wraparound"),
+    ],
+)
+def test_shamir_matches_hand_calculated_points(slope, expected_values, monkeypatch):
+    # For s = 5, f(x) = 5 + 3x gives 8, 11 and 14.
+    # With a = p - 2, f(x) ≡ 5 - 2x mod p, giving 3, 1 and p - 1.
+    # For x = 1 and x = 3, the interpolation numerator 3*y1 - y3
+    # is 10 mod p in both cases. Multiplying by the inverse (p + 1)/2 gives 5.
+    def sample(modulus):
+        assert modulus == SPEC_FIELD_PRIME
+        return slope
+
+    monkeypatch.setattr(threshold.secrets, "randbelow", sample)
+    key = bytes(31) + b"\x05"
+    expected_shares = tuple(
+        bytes([index]) + value.to_bytes(66, "big")
+        for index, value in enumerate(expected_values, start=1)
+    )
+
+    assert split_key(key) == expected_shares
+    for pair in combinations(expected_shares, 2):
+        assert combine_shares(pair) == key
+        assert combine_shares(pair[::-1]) == key
 
 
 @pytest.mark.parametrize("value", [b"", bytes(31), bytes(33), bytearray(32), "a" * 32])
