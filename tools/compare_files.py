@@ -1,13 +1,14 @@
 """Compare byte counts, SHA-256 and contents without printing file data."""
 
 import argparse
-import hashlib
 import json
 from pathlib import Path
 
+from secure_share.crypto_ops import SHA256
+
 
 def compare_files(expected, actual):
-    expected_hash, actual_hash = hashlib.sha256(), hashlib.sha256()
+    expected_hash, actual_hash = SHA256(), SHA256()
     expected_bytes = actual_bytes = 0
     equal = True
     with Path(expected).open('rb') as left, Path(actual).open('rb') as right:
@@ -25,8 +26,8 @@ def compare_files(expected, actual):
         'equal': equal,
         'expected_bytes': expected_bytes,
         'actual_bytes': actual_bytes,
-        'expected_sha256': expected_hash.hexdigest(),
-        'actual_sha256': actual_hash.hexdigest(),
+        'expected_sha256': expected_hash.digest().hex(),
+        'actual_sha256': actual_hash.digest().hex(),
     }
 
 

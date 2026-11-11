@@ -1,13 +1,12 @@
 """Build and open threshold packages without exposing unwrapped shares to the UI."""
 
 from dataclasses import dataclass, field
-import hashlib
 from pathlib import Path
 import secrets
 
 from . import threshold
 from .config import AES_KEY_BYTES, MAX_FILE_BYTES, MAX_PACKAGE_BYTES, NONCE_BYTES
-from .crypto_ops import unwrap_threshold_secret, wrap_threshold_secret
+from .crypto_ops import sha256, unwrap_threshold_secret, wrap_threshold_secret
 from .errors import ErrorCode, ShareError
 from .models import KeyRole, Payload, TrustStatus
 
@@ -34,7 +33,7 @@ class ThresholdOpened:
 
 
 def _package_id(package):
-    return hashlib.sha256(package.signature).hexdigest()
+    return sha256(package.signature).hex()
 
 
 def _check_share(header, position, share):

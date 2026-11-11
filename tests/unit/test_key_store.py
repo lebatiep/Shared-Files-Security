@@ -6,7 +6,6 @@ from tempfile import TemporaryDirectory
 import unittest
 from unittest.mock import patch
 
-from cryptography.exceptions import UnsupportedAlgorithm
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
@@ -72,6 +71,20 @@ class KeyStoreTests(unittest.TestCase):
                     if role == KeyRole.ENCRYPTION:
                         self.assertEqual(restored.resolve_decryption_key('alice', fp).fingerprint, fp)
 
+    def test_imports_encrypted_private_key_written_by_reference_backend(self):
+        profile = json.loads(self.initial)
+        entry = profile['generations'][0]['encryption']
+        reference = serialization.load_pem_private_key(entry['private'].encode('ascii'), PASSWORD)
+        entry['private'] = reference.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.PKCS8,
+            serialization.BestAvailableEncryption(PASSWORD),
+        ).decode('ascii')
+        self.path.write_text(json.dumps(profile))
+        fp = fingerprint(load_public(entry['public']))
+        unlocked = self.store.unlock_private_key('alice', KeyRole.ENCRYPTION, fp, PASSWORD)
+        self.assertEqual(unlocked.public_key().public_numbers().n, reference.public_key().public_numbers().n)
+
     @pytest.mark.case("I07")
     def test_wrong_password_does_not_change_profile(self):
         for operation in (self.store.rotate_keys, self.store.backup_profile):
@@ -129,7 +142,7 @@ class KeyStoreTests(unittest.TestCase):
         self.assert_error(ErrorCode.PROFILE_INVALID, lambda: self.store.get_profile('alice'))
 
     def test_unsupported_private_encryption_is_safe_failure(self):
-        with patch('secure_share.keys.serialization.load_pem_private_key', side_effect=UnsupportedAlgorithm('secret')):
+        with patch('secure_share.keys.load_private', side_effect=ValueError('secret')):
             self.assert_error(ErrorCode.KEY_UNLOCK_FAILED, lambda: self.store.backup_profile('alice', PASSWORD))
 
     @pytest.mark.case("I09")

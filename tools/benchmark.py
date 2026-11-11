@@ -1,7 +1,6 @@
 """Measure the Shamir 2-of-3 file-sharing workflow."""
 
 import argparse
-import importlib.metadata
 import json
 import os
 from pathlib import Path
@@ -175,7 +174,7 @@ def main(argv=None):
         'ram_bytes': _memory_bytes(),
         'revision': revision,
         'working_tree_dirty': bool(status) if status is not None else None,
-        'cryptography': importlib.metadata.version('cryptography'),
+        'crypto_backend': 'pure-python',
         'mode': SHAMIR,
         'measurement': (
             'One machine with separate profiles. Timings include key loading, cryptography and disk I/O. '

@@ -11,7 +11,6 @@ Keys come from tests.rsa_fixtures (public, test-only); never use them for real d
 
 import argparse
 import base64
-import hashlib
 import json
 from pathlib import Path
 
@@ -152,7 +151,7 @@ def write_cases(out):
     for name, case, data, field, expected, note in build_cases():
         (out / name).write_bytes(data)
         manifest.append({'file': name, 'case': case, 'replaced': field, 'expected_stop': expected,
-                         'note': note, 'sha256': hashlib.sha256(data).hexdigest(), 'bytes': len(data)})
+                         'note': note, 'sha256': sha256(data).hex(), 'bytes': len(data)})
     (out / 'manifest.json').write_text(json.dumps(manifest, indent=2, ensure_ascii=False), encoding='utf-8')
     return manifest
 

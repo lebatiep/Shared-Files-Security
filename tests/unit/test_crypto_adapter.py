@@ -42,6 +42,31 @@ def test_app_reads_existing_python_backend_packets(private_key):
     assert crypto.decrypt_payload(key, nonce, ciphertext, b'header') == b'old package contents'
 
 
+def test_gcm_interoperates_with_reference_on_multiple_blocks():
+    crypto = CryptoOps()
+    key, nonce, aad = bytes(range(32)), bytes(range(12)), b'header'
+    payload = bytes(range(256)) * 16 + b'partial block'
+    expected = AESGCM(key).encrypt(nonce, payload, aad)
+    assert crypto.encrypt_payload(key, nonce, payload, aad) == expected
+    assert crypto.decrypt_payload(key, nonce, expected, aad) == payload
+
+
+@pytest.mark.parametrize(('label', 'size'), [
+    (b'SFILE2-RECIPIENT-SHARE', 67),
+    (b'SFILE2-CONTRIBUTION', 99),
+])
+def test_threshold_oaep_interoperates_with_reference(private_key, label, size):
+    secret = bytes(range(size))
+    public_key = private_key.public_key()
+    oaep = padding.OAEP(mgf=padding.MGF1(hashes.SHA256()), algorithm=hashes.SHA256(), label=label)
+    wrapped = crypto_ops.wrap_threshold_secret(secret, public_key, label)
+    assert private_key.decrypt(wrapped, oaep) == secret
+    assert crypto_ops.unwrap_threshold_secret(public_key.encrypt(secret, oaep), private_key, label) == secret
+    with pytest.raises(ShareError) as error:
+        crypto_ops.unwrap_threshold_secret(wrapped, private_key, b'wrong label')
+    assert error.value.code is ErrorCode.INVALID_SHARE
+
+
 def test_crypto_adapter_rejects_invalid_data(private_key):
     crypto = CryptoOps()
     operations = (

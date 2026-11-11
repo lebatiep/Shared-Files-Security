@@ -2,7 +2,6 @@
 
 import base64
 from dataclasses import dataclass, field
-import hashlib
 import re
 import secrets
 
@@ -19,6 +18,7 @@ from .config import (
     TRANSFER_ID_HEX_LENGTH,
     WRAPPED_KEY_BYTES,
 )
+from .crypto_ops import sha256
 from .envelope import _decode_base64, _domain_call, encode_json, frame, read_json
 from .errors import ErrorCode, ShareError
 
@@ -128,7 +128,7 @@ def share_commitment(transfer_id: str, share: bytes) -> str:
     """Commit to a share's bytes and index within the given transfer."""
     _check_hex(transfer_id, _TRANSFER_ID, error=ErrorCode.INVALID_SHARE)
     _decode_share(share)
-    return hashlib.sha256(_SHARE_CONTEXT + frame(bytes.fromhex(transfer_id)) + frame(share)).hexdigest()
+    return sha256(_SHARE_CONTEXT + frame(bytes.fromhex(transfer_id)) + frame(share)).hex()
 
 
 def _check_header(header: ThresholdHeader) -> None:

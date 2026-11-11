@@ -2,14 +2,12 @@ from pathlib import Path
 import re
 from threading import RLock
 
-from cryptography.exceptions import UnsupportedAlgorithm
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
-
 from .config import MIN_PASSPHRASE_CHARACTERS, RSA_KEY_BITS, RSA_PUBLIC_EXPONENT
-from .crypto_ops import sha256
+from .crypto_ops import generate_rsa_key, is_probable_prime, sha256
 from .envelope import encode_json, read_json
 from .errors import ErrorCode, ShareError
+from . import key_codec
+from .key_codec import RSAPrivateKey, encrypted_private_pem, load_private, public_der, public_pem
 from .models import KeyReference, KeyRole, ProfileSummary
 from .storage import LocalStorage
 
@@ -17,25 +15,15 @@ MAX_PROFILE_BYTES = 262144
 MAX_GENERATIONS = 10
 
 
-def public_pem(key):
-    return key.public_bytes(serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo).decode('ascii')
-
-
 def load_public(pem):
     try:
-        if not isinstance(pem, str) or len(pem) > 8192 or not re.fullmatch(r'-----BEGIN PUBLIC KEY-----\r?\n[A-Za-z0-9+/=\r\n]+\r?\n-----END PUBLIC KEY-----\r?\n?', pem):
-            raise ValueError
-        key = serialization.load_pem_public_key(pem.encode('ascii'))
-        if not isinstance(key, rsa.RSAPublicKey) or key.key_size != RSA_KEY_BITS or key.public_numbers().e != RSA_PUBLIC_EXPONENT:
-            raise ValueError
-        return key
-    except (ValueError, TypeError, UnicodeError, UnsupportedAlgorithm):
+        return key_codec.load_public(pem)
+    except (ValueError, TypeError, UnicodeError):
         raise ShareError(ErrorCode.PROFILE_INVALID) from None
 
 
 def fingerprint(key):
-    der = key.public_bytes(serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo)
-    return sha256(der).hex()
+    return sha256(public_der(key)).hex()
 
 
 def identifier(value):
@@ -124,10 +112,11 @@ class KeyStore:
             raise ShareError(ErrorCode.INVALID_REQUEST)
         result = {}
         for role in KeyRole:
-            private = rsa.generate_private_key(public_exponent=RSA_PUBLIC_EXPONENT, key_size=RSA_KEY_BITS)
-            pem = private.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8,
-                                        serialization.BestAvailableEncryption(passphrase))
-            result[role.value] = {'public': public_pem(private.public_key()), 'private': pem.decode('ascii')}
+            private = RSAPrivateKey(*generate_rsa_key(RSA_KEY_BITS, RSA_PUBLIC_EXPONENT))
+            result[role.value] = {
+                'public': public_pem(private.public_key()),
+                'private': encrypted_private_pem(private, passphrase),
+            }
         return result
 
     def create_profile(self, profile_id, name, passphrase):
@@ -181,17 +170,19 @@ class KeyStore:
 
     def _unlock_entry(self, entry, fp, passphrase):
         try:
-            key = serialization.load_pem_private_key(entry['private'].encode('ascii'), password=passphrase)
-            if not isinstance(key, rsa.RSAPrivateKey) or fingerprint(key.public_key()) != fp:
+            key = load_private(entry['private'], passphrase)
+            if fingerprint(key.public_key()) != fp:
                 raise ValueError
             return key
-        except (ValueError, TypeError, UnicodeError, UnsupportedAlgorithm):
+        except (ValueError, TypeError, UnicodeError):
             raise ShareError(ErrorCode.KEY_UNLOCK_FAILED) from None
 
-    def _validate_private_keys(self, obj, passphrase):
+    def _validate_private_keys(self, obj, passphrase, *, imported=False):
         for generation in obj['generations']:
             for entry in generation.values():
-                self._unlock_entry(entry, fingerprint(load_public(entry['public'])), passphrase)
+                key = self._unlock_entry(entry, fingerprint(load_public(entry['public'])), passphrase)
+                if imported and not (is_probable_prime(key.p) and is_probable_prime(key.q)):
+                    raise ShareError(ErrorCode.KEY_UNLOCK_FAILED)
 
     def rotate_keys(self, profile_id, passphrase):
         with self.lock:
@@ -218,6 +209,6 @@ class KeyStore:
             obj = self._read(profile_id, data)
             # Validate every retained key before committing anything. Contacts
             # are not restored: public keys must be verified on the new machine.
-            self._validate_private_keys(obj, passphrase)
+            self._validate_private_keys(obj, passphrase, imported=True)
             self.storage.save_atomic(encode_json(obj), self._path(profile_id))
             return self.get_profile(profile_id)

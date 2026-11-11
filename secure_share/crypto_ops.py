@@ -7,11 +7,7 @@ gian thực thi hằng định, mã chưa được kiểm toán.
 
 from math import gcd, isqrt
 from os import urandom
-
-from cryptography.exceptions import InvalidSignature, InvalidTag
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import padding, rsa
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from struct import Struct
 
 from .config import AES_KEY_BYTES, NONCE_BYTES, OAEP_LABEL, PSS_SALT_BYTES, RSA_KEY_BITS, RSA_PUBLIC_EXPONENT
 
@@ -57,40 +53,73 @@ def _rotate_right(value: int, count: int) -> int:
     return ((value >> count) | (value << (32 - count))) & _MASK
 
 
-def sha256(data: bytes) -> bytes:
-    """Trả về giá trị băm SHA-256 gồm 32 byte."""
-    if not isinstance(data, bytes):
-        raise TypeError("data phải là bytes")
-    bit_length = len(data) * 8
-    if bit_length >= 1 << 64:
-        raise ValueError("Dữ liệu quá dài cho SHA-256")
-    padded = data + b"\x80" + b"\x00" * ((55 - len(data)) % 64)
-    padded += bit_length.to_bytes(8, "big")
-    state = list(_INITIAL)
+_SHA_WORDS = Struct('>16I')
 
-    for offset in range(0, len(padded), 64):
-        block = padded[offset:offset + 64]
-        words = [int.from_bytes(block[i:i + 4], "big") for i in range(0, 64, 4)]
+
+def _sha256_blocks(state, data):
+    mask = _MASK
+    for block in _SHA_WORDS.iter_unpack(data):
+        words = list(block)
         for i in range(16, 64):
             x, y = words[i - 15], words[i - 2]
-            s0 = _rotate_right(x, 7) ^ _rotate_right(x, 18) ^ (x >> 3)
-            s1 = _rotate_right(y, 17) ^ _rotate_right(y, 19) ^ (y >> 10)
-            words.append((words[i - 16] + s0 + words[i - 7] + s1) & _MASK)
+            # These rotate terms are reduced together by the 32-bit sum.
+            s0 = (x >> 7) ^ (x << 25) ^ (x >> 18) ^ (x << 14) ^ (x >> 3)
+            s1 = (y >> 17) ^ (y << 15) ^ (y >> 19) ^ (y << 13) ^ (y >> 10)
+            words.append((words[i - 16] + s0 + words[i - 7] + s1) & mask)
 
         a, b, c, d, e, f, g, h = state
         for constant, word in zip(_K, words):
-            sigma1 = _rotate_right(e, 6) ^ _rotate_right(e, 11) ^ _rotate_right(e, 25)
-            choose = (e & f) ^ (~e & g)
-            temp1 = (h + sigma1 + choose + constant + word) & _MASK
-            sigma0 = _rotate_right(a, 2) ^ _rotate_right(a, 13) ^ _rotate_right(a, 22)
-            majority = (a & b) ^ (a & c) ^ (b & c)
-            temp2 = (sigma0 + majority) & _MASK
+            sigma1 = (e >> 6) ^ (e << 26) ^ (e >> 11) ^ (e << 21) ^ (e >> 25) ^ (e << 7)
+            choose = g ^ (e & (f ^ g))
+            temp1 = h + sigma1 + choose + constant + word
+            sigma0 = (a >> 2) ^ (a << 30) ^ (a >> 13) ^ (a << 19) ^ (a >> 22) ^ (a << 10)
+            majority = (a & b) ^ (c & (a ^ b))
+            temp2 = sigma0 + majority
             h, g, f, e, d, c, b, a = (
-                g, f, e, (d + temp1) & _MASK, c, b, a, (temp1 + temp2) & _MASK
+                g, f, e, (d + temp1) & mask, c, b, a, (temp1 + temp2) & mask
             )
-        state = [(old + new) & _MASK for old, new in zip(state, (a, b, c, d, e, f, g, h))]
+        state[:] = [(old + new) & mask for old, new in zip(state, (a, b, c, d, e, f, g, h))]
 
-    return b"".join(word.to_bytes(4, "big") for word in state)
+
+class SHA256:
+    """SHA-256 tăng dần với bộ đệm nhỏ hơn một khối."""
+
+    def __init__(self, data: bytes = b''):
+        self._state = list(_INITIAL)
+        self._length = 0
+        self._tail = b''
+        self.update(data)
+
+    def update(self, data: bytes) -> None:
+        if not isinstance(data, bytes):
+            raise TypeError('data phải là bytes')
+        length = self._length + len(data)
+        if length >= 1 << 61:
+            raise ValueError('Dữ liệu quá dài cho SHA-256')
+        pending = self._tail + data
+        end = len(pending) - len(pending) % 64
+        _sha256_blocks(self._state, memoryview(pending)[:end])
+        self._tail = pending[end:]
+        self._length = length
+
+    def copy(self):
+        other = self.__class__.__new__(self.__class__)
+        other._state = self._state.copy()
+        other._tail = self._tail
+        other._length = self._length
+        return other
+
+    def digest(self) -> bytes:
+        state = self._state.copy()
+        padded = self._tail + b'\x80' + bytes((55 - self._length) % 64)
+        padded += (self._length * 8).to_bytes(8, 'big')
+        _sha256_blocks(state, padded)
+        return b''.join(word.to_bytes(4, 'big') for word in state)
+
+
+def sha256(data: bytes) -> bytes:
+    """Trả về giá trị băm SHA-256 gồm 32 byte."""
+    return SHA256(data).digest()
 
 
 def mgf1(seed: bytes, length: int) -> bytes:
@@ -168,6 +197,18 @@ def _build_sbox():
 
 
 _SBOX = _build_sbox()
+_INV_SBOX = bytes(sorted(range(256), key=_SBOX.__getitem__))
+_AES_WORDS = Struct('>4I')
+
+
+def _aes_encryption_tables():
+    # Each entry substitutes one byte and contributes its MixColumns product.
+    first = [(_xtime(s) << 24) | (s << 16) | (s << 8) | (_xtime(s) ^ s) for s in _SBOX]
+    return tuple(tuple(_rotate_right(word, shift) for word in first) for shift in (0, 8, 16, 24))
+
+
+_AES_ENC_TABLES = _aes_encryption_tables()
+_AES_INV_MUL = tuple(tuple(_gf_multiply(a, b) for a in range(256)) for b in (9, 11, 13, 14))
 
 
 def _expand_key(key):
@@ -182,33 +223,74 @@ def _expand_key(key):
         elif i % 8 == 4:
             temp = [_SBOX[x] for x in temp]
         words.append([a ^ b for a, b in zip(words[i - 8], temp)])
-    return [sum(words[i:i + 4], []) for i in range(0, 60, 4)]
+    words = [int.from_bytes(bytes(word), 'big') for word in words]
+    return [tuple(words[i:i + 4]) for i in range(0, 60, 4)]
 
 
 def _encrypt_block(block, round_keys):
-    state = [a ^ b for a, b in zip(block, round_keys[0])]
-    for round_number in range(1, 15):
-        state = [_SBOX[x] for x in state]
-        state = [state[4 * ((column + row) % 4) + row]
+    a, b, c, d = _AES_WORDS.unpack(block)
+    k0, k1, k2, k3 = round_keys[0]
+    a, b, c, d = a ^ k0, b ^ k1, c ^ k2, d ^ k3
+    t0, t1, t2, t3 = _AES_ENC_TABLES
+    # The rotated column indices perform ShiftRows before MixColumns.
+    for i in range(1, 14):
+        k0, k1, k2, k3 = round_keys[i]
+        a, b, c, d = (
+            t0[a >> 24] ^ t1[b >> 16 & 255] ^ t2[c >> 8 & 255] ^ t3[d & 255] ^ k0,
+            t0[b >> 24] ^ t1[c >> 16 & 255] ^ t2[d >> 8 & 255] ^ t3[a & 255] ^ k1,
+            t0[c >> 24] ^ t1[d >> 16 & 255] ^ t2[a >> 8 & 255] ^ t3[b & 255] ^ k2,
+            t0[d >> 24] ^ t1[a >> 16 & 255] ^ t2[b >> 8 & 255] ^ t3[c & 255] ^ k3,
+        )
+    # The final round substitutes and shifts bytes without mixing columns.
+    s = _SBOX
+    k0, k1, k2, k3 = round_keys[14]
+    return _AES_WORDS.pack(
+        (s[a >> 24] << 24 | s[b >> 16 & 255] << 16 | s[c >> 8 & 255] << 8 | s[d & 255]) ^ k0,
+        (s[b >> 24] << 24 | s[c >> 16 & 255] << 16 | s[d >> 8 & 255] << 8 | s[a & 255]) ^ k1,
+        (s[c >> 24] << 24 | s[d >> 16 & 255] << 16 | s[a >> 8 & 255] << 8 | s[b & 255]) ^ k2,
+        (s[d >> 24] << 24 | s[a >> 16 & 255] << 16 | s[b >> 8 & 255] << 8 | s[c & 255]) ^ k3,
+    )
+
+
+def _decrypt_block(block, round_keys):
+    state = [a ^ b for a, b in zip(block, _AES_WORDS.pack(*round_keys[14]))]
+    m9, m11, m13, m14 = _AES_INV_MUL
+    for i in range(13, -1, -1):
+        state = [_INV_SBOX[state[4 * ((column - row) % 4) + row]]
                  for column in range(4) for row in range(4)]
-        if round_number != 14:
+        state = [a ^ b for a, b in zip(state, _AES_WORDS.pack(*round_keys[i]))]
+        if i:
             for offset in range(0, 16, 4):
                 a, b, c, d = state[offset:offset + 4]
-                total = a ^ b ^ c ^ d
                 state[offset:offset + 4] = [
-                    a ^ total ^ _xtime(a ^ b), b ^ total ^ _xtime(b ^ c),
-                    c ^ total ^ _xtime(c ^ d), d ^ total ^ _xtime(d ^ a)]
-        state = [a ^ b for a, b in zip(state, round_keys[round_number])]
+                    m14[a] ^ m11[b] ^ m13[c] ^ m9[d],
+                    m9[a] ^ m14[b] ^ m11[c] ^ m13[d],
+                    m13[a] ^ m9[b] ^ m14[c] ^ m11[d],
+                    m11[a] ^ m13[b] ^ m9[c] ^ m14[d],
+                ]
     return bytes(state)
 
 
-def encrypt_block(block: bytes, key: bytes) -> bytes:
-    """Mã hóa một khối 16 byte bằng khóa AES-256."""
+def _validate_aes_block(block, key):
     if not isinstance(block, bytes) or len(block) != 16:
         raise ValueError('Khối AES phải là bytes dài 16 byte.')
     if not isinstance(key, bytes) or len(key) != 32:
         raise ValueError('Khóa AES-256 phải là bytes dài 32 byte.')
+
+
+def encrypt_block(block: bytes, key: bytes) -> bytes:
+    """Mã hóa một khối 16 byte bằng khóa AES-256."""
+    _validate_aes_block(block, key)
     return _encrypt_block(block, _expand_key(key))
+
+
+def decrypt_block(block: bytes, key: bytes) -> bytes:
+    """Giải mã một khối 16 byte bằng khóa AES-256."""
+    _validate_aes_block(block, key)
+    return _decrypt_block(block, _expand_key(key))
+
+
+_GHASH_REDUCTION = 0xE1000000000000000000000000000000
 
 
 def _multiply(x, y):
@@ -216,18 +298,45 @@ def _multiply(x, y):
     for bit in range(127, -1, -1):
         if (x >> bit) & 1:
             result ^= y
-        y = (y >> 1) ^ (0xE1000000000000000000000000000000 if y & 1 else 0)
+        y = (y >> 1) ^ (_GHASH_REDUCTION if y & 1 else 0)
     return result
 
 
+def _ghash_table(h):
+    # A byte's contribution is the XOR of the corresponding eight basis products.
+    tables = []
+    for _ in range(16):
+        basis = []
+        for _ in range(8):
+            basis.append(h)
+            h = (h >> 1) ^ (_GHASH_REDUCTION if h & 1 else 0)
+        products = [0]
+        for bit in reversed(basis):
+            products += [value ^ bit for value in products]
+        tables.append(products)
+    return tables
+
+
 def _ghash(h, aad, ciphertext):
+    if len(aad) + len(ciphertext) >= 4096:
+        tables = _ghash_table(h)
+
+        def multiply(word):
+            result = 0
+            for table, byte in zip(tables, word.to_bytes(16, 'big')):
+                result ^= table[byte]
+            return result
+    else:
+        def multiply(word):
+            return _multiply(word, h)
+
     value = 0
     for data in (aad, ciphertext):
         for offset in range(0, len(data), 16):
             block = data[offset:offset + 16].ljust(16, b'\0')
-            value = _multiply(value ^ int.from_bytes(block, 'big'), h)
+            value = multiply(value ^ int.from_bytes(block, 'big'))
     lengths = (len(aad) * 8 << 64) | (len(ciphertext) * 8)
-    return _multiply(value ^ lengths, h).to_bytes(16, 'big')
+    return multiply(value ^ lengths).to_bytes(16, 'big')
 
 
 def _validate(data, key, nonce, aad):
@@ -292,6 +401,7 @@ def _self_test():
     key = bytes(range(32))
     block = bytes.fromhex('00112233445566778899aabbccddeeff')
     assert encrypt_block(block, key).hex() == '8ea2b7ca516745bfeafc49904b496089'
+    assert decrypt_block(bytes.fromhex('8ea2b7ca516745bfeafc49904b496089'), key) == block
     key, nonce = bytes(32), bytes(12)
     assert encrypt_payload(b'', key, nonce).hex() == '530f8afbc74536b9a963b4f1c4cb738b'
     sealed = encrypt_payload(bytes(16), key, nonce)
@@ -314,7 +424,7 @@ def _self_test():
 
 def check_key(n: int, exponent: int) -> None:
     """Kiểm tra tham số theo profile RSA-3072 của dự án."""
-    if type(n) is not int or n.bit_length() != 3072 or n % 2 == 0:
+    if type(n) is not int or n.bit_length() != RSA_KEY_BITS or n % 2 == 0:
         raise ValueError("Modulus RSA phải là số lẻ 3072 bit")
     if type(exponent) is not int or not 1 < exponent < n or exponent % 2 == 0:
         raise ValueError("Số mũ RSA không hợp lệ")
@@ -325,15 +435,21 @@ def wrap_key(aes_key: bytes, n: int, e: int = 65537, seed: bytes = None) -> byte
 
     seed chỉ dùng cho test lặp lại được; mặc định lấy 32 byte từ urandom.
     """
-    check_key(n, e)
-    if e != 65537:
-        raise ValueError("Public exponent phải là 65537")
     if not isinstance(aes_key, bytes) or len(aes_key) != 32:
         raise ValueError("Khóa AES phải dài 32 byte")
+    return _oaep_wrap(aes_key, n, e, OAEP_LABEL, seed)
+
+
+def _oaep_wrap(message, n, e, label, seed=None):
+    check_key(n, e)
+    if e != RSA_PUBLIC_EXPONENT:
+        raise ValueError('Public exponent phải là 65537')
+    if not isinstance(message, bytes) or len(message) > 318 or not isinstance(label, bytes):
+        raise ValueError('Thông điệp hoặc nhãn OAEP không hợp lệ')
 
     # EM = 0x00 || maskedSeed || maskedDB (tổng cộng 384 byte).
-    padding = bytes(384 - len(aes_key) - 2 * 32 - 2)
-    data_block = sha256(b"") + padding + b"\x01" + aes_key
+    padding = bytes(384 - len(message) - 2 * 32 - 2)
+    data_block = sha256(label) + padding + b"\x01" + message
     if seed is None:
         seed = urandom(32)
     elif not isinstance(seed, bytes) or len(seed) != 32:
@@ -352,26 +468,30 @@ class AESKeyLengthError(ValueError):
 def unwrap_key(wrapped_key: bytes, n: int, d: int) -> bytes:
     """Mở bọc bằng private key (n, d); mọi OAEP lỗi đều bị từ chối."""
     check_key(n, d)
+    key = _oaep_unwrap(wrapped_key, n, lambda value: pow(value, d, n), OAEP_LABEL)
+    if len(key) != AES_KEY_BYTES:
+        raise AESKeyLengthError('AES key must be 32 bytes')
+    return key
+
+
+def _oaep_unwrap(wrapped_key, n, transform, label):
     if not isinstance(wrapped_key, bytes) or len(wrapped_key) != 384:
         raise ValueError("Khóa bọc RSA không hợp lệ")
     encrypted = int.from_bytes(wrapped_key, "big")
     if encrypted >= n:
         raise ValueError("Khóa bọc RSA không hợp lệ")
-    encoded = pow(encrypted, d, n).to_bytes(384, "big")
+    encoded = transform(encrypted).to_bytes(384, "big")
     masked_seed, masked_data = encoded[1:33], encoded[33:]
     seed = xor_bytes(masked_seed, mgf1(masked_data, 32))
     data_block = xor_bytes(masked_data, mgf1(seed, len(masked_data)))
 
-    if encoded[0] != 0 or data_block[:32] != sha256(b""):
+    if encoded[0] != 0 or data_block[:32] != sha256(label):
         raise ValueError("Khóa bọc RSA không hợp lệ")
     padding_and_key = data_block[32:]
     separator = padding_and_key.find(b"\x01")
     if separator < 0 or any(padding_and_key[:separator]):
         raise ValueError("Khóa bọc RSA không hợp lệ")
-    key = padding_and_key[separator + 1:]
-    if len(key) != 32:
-        raise AESKeyLengthError("AES key must be 32 bytes")
-    return key
+    return padding_and_key[separator + 1:]
 
 
 # ======================================================================
@@ -381,17 +501,20 @@ def unwrap_key(wrapped_key: bytes, n: int, d: int) -> bytes:
 def sign_package(message: bytes, n: int, d: int) -> bytes:
     """Ký đúng chuỗi byte message bằng private key ký (n, d)."""
     check_key(n, d)
+    signature = pow(int.from_bytes(_pss_encode(message), 'big'), d, n)
+    return signature.to_bytes(384, 'big')
+
+
+def _pss_encode(message):
     if not isinstance(message, bytes):
         raise TypeError("Dữ liệu ký phải là bytes")
-    salt = urandom(32)
+    salt = urandom(PSS_SALT_BYTES)
     digest = sha256(bytes(8) + sha256(message) + salt)
     data_block = bytes(318) + b"\x01" + salt
     masked_data = bytearray(xor_bytes(data_block, mgf1(digest, 351)))
     # emBits = modBits - 1 = 3071: bit đầu tiên phải bằng 0.
     masked_data[0] &= 0x7F
-    encoded = bytes(masked_data) + digest + b"\xbc"
-    signature = pow(int.from_bytes(encoded, "big"), d, n)
-    return signature.to_bytes(384, "big")
+    return bytes(masked_data) + digest + b"\xbc"
 
 
 def verify_signature(message: bytes, signature: bytes, n: int, e: int = 65537) -> bool:
@@ -498,47 +621,68 @@ def generate_rsa_key(bits: int = 3072, e: int = 65537) -> tuple:
         return p * q, e, modinv(e, lam), p, q
 
 
-def _public_key(key):
-    if (
-        not isinstance(key, rsa.RSAPublicKey)
-        or key.key_size != RSA_KEY_BITS
-        or key.public_numbers().e != RSA_PUBLIC_EXPONENT
-    ):
-        raise ShareError(ErrorCode.PROFILE_INVALID)
-    return key
+def _public_key_numbers(key):
+    try:
+        numbers = key.public_numbers()
+        check_key(numbers.n, numbers.e)
+        if numbers.e != RSA_PUBLIC_EXPONENT:
+            raise ValueError
+        return numbers.n, numbers.e
+    except (AttributeError, TypeError, ValueError):
+        raise ShareError(ErrorCode.PROFILE_INVALID) from None
 
 
-def _private_key(key):
-    if not isinstance(key, rsa.RSAPrivateKey):
-        raise ShareError(ErrorCode.PROFILE_INVALID)
-    _public_key(key.public_key())
-    return key
+def _private_key_numbers(key):
+    try:
+        n, e = _public_key_numbers(key.public_key())
+        numbers = key.private_numbers()
+        d, p, q = numbers.d, numbers.p, numbers.q
+        check_key(n, d)
+        if type(p) is not int or type(q) is not int or min(p, q) < 3 or p == q or p * q != n:
+            raise ValueError
+        return n, e, d, p, q
+    except (AttributeError, TypeError, ValueError):
+        raise ShareError(ErrorCode.PROFILE_INVALID) from None
 
 
-_OAEP = padding.OAEP(mgf=padding.MGF1(hashes.SHA256()), algorithm=hashes.SHA256(), label=OAEP_LABEL)
-_PSS = padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=PSS_SALT_BYTES)
+def _rsa_private(value, n, e, d, p, q):
+    """Apply the private exponent using RSA blinding and CRT."""
+    while True:
+        factor = 2 + _random_below(n - 2)
+        if gcd(factor, n) == 1:
+            break
+    blinded = value * pow(factor, e, n) % n
+    modulo_p = pow(blinded, d % (p - 1), p)
+    modulo_q = pow(blinded, d % (q - 1), q)
+    combined = modulo_q + q * ((modulo_p - modulo_q) * pow(q, -1, p) % p)
+    result = combined * pow(factor, -1, n) % n
+    if pow(result, e, n) != value:
+        raise ValueError('Phép toán khóa riêng RSA không hợp lệ')
+    return result
 
 
-def _threshold_oaep(label):
-    return padding.OAEP(mgf=padding.MGF1(hashes.SHA256()), algorithm=hashes.SHA256(), label=label)
+def _unwrap_for_key(wrapped, private_key, label):
+    numbers = _private_key_numbers(private_key)
+    return _oaep_unwrap(wrapped, numbers[0], lambda value: _rsa_private(value, *numbers), label)
 
 
 def wrap_threshold_secret(secret, public_key, label):
-    return _public_key(public_key).encrypt(secret, _threshold_oaep(label))
+    n, e = _public_key_numbers(public_key)
+    return _oaep_wrap(secret, n, e, label)
 
 
 def unwrap_threshold_secret(wrapped, private_key, label):
     try:
-        return _private_key(private_key).decrypt(wrapped, _threshold_oaep(label))
+        return _unwrap_for_key(wrapped, private_key, label)
     except (ValueError, TypeError):
         raise ShareError(ErrorCode.INVALID_SHARE) from None
 
 
 class CryptoOps:
-    """Library backend for the desktop app. SFILE v1 packets stay compatible."""
+    """Connect the desktop workflow to the Python implementations above."""
 
     def generate_aes_key(self):
-        return AESGCM.generate_key(bit_length=AES_KEY_BYTES * 8)
+        return urandom(AES_KEY_BYTES)
 
     def generate_nonce(self):
         return urandom(NONCE_BYTES)
@@ -546,11 +690,11 @@ class CryptoOps:
     def wrap_key(self, aes_key, public_key):
         if not isinstance(aes_key, bytes) or len(aes_key) != AES_KEY_BYTES:
             raise ShareError(ErrorCode.AES_KEY_LENGTH_INVALID)
-        return _public_key(public_key).encrypt(aes_key, _OAEP)
+        return wrap_key(aes_key, *_public_key_numbers(public_key))
 
     def unwrap_key(self, wrapped_key, private_key):
         try:
-            aes_key = _private_key(private_key).decrypt(wrapped_key, _OAEP)
+            aes_key = _unwrap_for_key(wrapped_key, private_key, OAEP_LABEL)
         except (ValueError, TypeError):
             raise ShareError(ErrorCode.UNWRAP_FAILED) from None
         if len(aes_key) != AES_KEY_BYTES:
@@ -565,25 +709,29 @@ class CryptoOps:
     def encrypt_payload(self, key, nonce, payload, aad):
         self._check_aead_inputs(key, nonce)
         try:
-            return AESGCM(key).encrypt(nonce, payload, aad)
+            return encrypt_payload(payload, key, nonce, aad)
         except (ValueError, TypeError):
             raise ShareError(ErrorCode.INVALID_LENGTH) from None
 
     def decrypt_payload(self, key, nonce, ciphertext, aad):
         self._check_aead_inputs(key, nonce)
         try:
-            return AESGCM(key).decrypt(nonce, ciphertext, aad)
-        except (InvalidTag, ValueError, TypeError):
+            return decrypt_payload(ciphertext, key, nonce, aad)
+        except (ValueError, TypeError):
             raise ShareError(ErrorCode.GCM_AUTH_FAILED) from None
 
     def sign_package(self, message, private_key):
         try:
-            return _private_key(private_key).sign(message, _PSS, hashes.SHA256())
+            numbers = _private_key_numbers(private_key)
+            value = int.from_bytes(_pss_encode(message), 'big')
+            return _rsa_private(value, *numbers).to_bytes(384, 'big')
         except (ValueError, TypeError):
             raise ShareError(ErrorCode.INVALID_REQUEST) from None
 
     def verify_signature(self, signature, message, public_key):
         try:
-            _public_key(public_key).verify(signature, message, _PSS, hashes.SHA256())
-        except (InvalidSignature, ValueError, TypeError):
+            valid = verify_signature(message, signature, *_public_key_numbers(public_key))
+        except (ValueError, TypeError):
             raise ShareError(ErrorCode.SIGNATURE_INVALID) from None
+        if not valid:
+            raise ShareError(ErrorCode.SIGNATURE_INVALID)

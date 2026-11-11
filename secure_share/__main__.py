@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import importlib
-import importlib.metadata
 import json
 from pathlib import Path
 import sys
@@ -32,16 +31,11 @@ def environment_report() -> dict[str, object]:
     """Inspect dependencies and module presence, without generating any secrets."""
     python_supported = sys.version_info >= (3, 12)
     crypto_available = False
-    crypto_version: str | None = None
     crypto_error: str | None = None
     try:
-        crypto_version = importlib.metadata.version("cryptography")
-        # Importing the compiled primitive also catches a broken local install.
-        importlib.import_module("cryptography.hazmat.primitives.ciphers.aead")
+        importlib.import_module("secure_share.crypto_ops")
         crypto_available = True
     except Exception as exc:
-        # A broken compiled dependency must also produce a readable check result.
-        # Do not print its arguments, which can include private local paths.
         crypto_error = type(exc).__name__
 
     missing = [
@@ -54,9 +48,9 @@ def environment_report() -> dict[str, object]:
         "version": __version__,
         "python_version": sys.version.split()[0],
         "python_supported": python_supported,
-        "cryptography_available": crypto_available,
-        "cryptography_version": crypto_version,
-        "cryptography_error": crypto_error,
+        "crypto_backend": "pure-python",
+        "crypto_available": crypto_available,
+        "crypto_error": crypto_error,
         "environment_ready": python_supported and crypto_available,
         "integration_modules_present": not missing,
         "missing_integration_modules": missing,

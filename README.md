@@ -35,8 +35,8 @@ flowchart TD
 | [Interface](secure_share/ui/app.py) and [startup](secure_share/application.py) | Build the profile, contact, and threshold-sharing tabs. Long-running tasks run in the background. |
 | [Workflow service](secure_share/service.py) | Runs one operation at a time and holds decrypted content in memory until the user saves or cancels. |
 | [Shamir](secure_share/threshold.py) and [threshold workflow](secure_share/threshold_workflow.py) | Split and reconstruct keys, parse packages, verify senders, and bind contributions to the package and recipient. |
-| [Cryptography](secure_share/crypto_ops.py) | Encrypts content, wraps shares, and signs or verifies packages using `cryptography`. |
-| [Profiles](secure_share/keys.py) and [contacts](secure_share/trust_store.py) | Manage separate encryption and signing key pairs, password-protected private keys, contact verification, key rotation, and backups. |
+| [Cryptography](secure_share/crypto_ops.py) | Implements AES-256-GCM, SHA-256, MGF1, RSA-OAEP and RSA-PSS in Python. |
+| [Profiles](secure_share/keys.py), [key encoding](secure_share/key_codec.py), and [contacts](secure_share/trust_store.py) | Manage separate encryption and signing key pairs, SPKI public keys, password-protected PKCS#8 private keys, contact verification, key rotation, and backups. |
 | [Storage](secure_share/storage.py) and [history](secure_share/history.py) | Enforce input limits, save through temporary files, recover from interrupted writes, and warn when a package has already been saved. |
 
 On Windows, the app stores profiles, contacts, history, and temporary-file recovery records in `%LOCALAPPDATA%\Shared-Files-Security`. Users choose where to save packages, backups, and recovered files.
@@ -77,12 +77,11 @@ The Windows demo requires **Python 3.12 with Tkinter**. Run the launcher from th
 .\start.cmd
 ```
 
-The launcher creates `.venv` if needed, installs the dependencies, and starts the app. You can also run setup manually.
+The launcher creates `.venv` if needed and starts the app. The app runs with Python's standard library, including Tkinter and the operating system's randomness source. You can also run setup manually.
 
 ```powershell
 py -3.12 -m venv .venv
 $py = (Resolve-Path .\.venv\Scripts\python.exe).Path
-& $py -m pip install -r requirements.txt
 & $py -m secure_share --check
 & $py -m secure_share
 ```
@@ -107,7 +106,10 @@ $py = (Resolve-Path .\.venv\Scripts\python.exe).Path
 
 ## Testing
 
+Install the test dependencies to run the suite. The tests use `cryptography` as an independent reference for interoperability checks.
+
 ```powershell
+& $py -m pip install -r requirements-dev.txt
 # Run the Shamir tests, including the Tkinter workflow
 & $py -m pytest -q tests/unit/test_threshold.py tests/unit/test_ui_threshold.py tests/integration/test_threshold_workflow.py tests/integration/test_threshold_tk.py
 
@@ -133,6 +135,7 @@ Run `compare_files` after saving the recovered file to the corresponding path. T
 - The threshold requires valid shares from two distinct holder keys. An exported contribution can be reused for the same package and recipient key.
 - Once saved, the plaintext can be copied by the person who opened it. Each profile owner is responsible for their passphrase, private keys, and backup.
 - This is an educational project. Use synthetic data for demonstrations.
+- The Python cryptography implementation has variable execution time and has not been independently audited.
 
 ## Team
 

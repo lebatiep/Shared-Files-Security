@@ -52,13 +52,12 @@ class StartupTests(unittest.TestCase):
             with redirect_stdout(output):
                 self.assertEqual(cli.main(["--check"]), 2)
 
-    def test_broken_crypto_install_is_reported_without_exception_arguments(self):
-        with patch.object(cli.importlib.metadata, "version", return_value="test-version"):
-            with patch.object(cli.importlib, "import_module", side_effect=RuntimeError("private-local-path")):
-                report = cli.environment_report()
+    def test_broken_crypto_module_is_reported_without_exception_arguments(self):
+        with patch.object(cli.importlib, "import_module", side_effect=RuntimeError("private-local-path")):
+            report = cli.environment_report()
         self.assertFalse(report["environment_ready"])
-        self.assertFalse(report["cryptography_available"])
-        self.assertEqual(report["cryptography_error"], "RuntimeError")
+        self.assertFalse(report["crypto_available"])
+        self.assertEqual(report["crypto_error"], "RuntimeError")
         self.assertNotIn("private-local-path", json.dumps(report))
 
     def test_missing_ui_has_clear_message_and_does_not_import_it(self):
@@ -119,7 +118,7 @@ class StartupTests(unittest.TestCase):
         env["PYTHONPATH"] = str(repo_root)
         with tempfile.TemporaryDirectory() as target:
             completed = subprocess.run(
-                [sys.executable, "-m", "secure_share", "--check"],
+                [sys.executable, "-S", "-m", "secure_share", "--check"],
                 cwd=target,
                 env=env,
                 capture_output=True,
@@ -127,8 +126,8 @@ class StartupTests(unittest.TestCase):
                 encoding="utf-8",
                 check=False,
             )
-            self.assertIn(completed.returncode, (0, 2))
-            self.assertIn("environment_ready", json.loads(completed.stdout))
+            self.assertEqual(completed.returncode, 0, completed.stderr or completed.stdout)
+            self.assertTrue(json.loads(completed.stdout)["environment_ready"])
             self.assertEqual(list(Path(target).iterdir()), [])
 
 
