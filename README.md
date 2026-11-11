@@ -1,6 +1,8 @@
 # Shared-Files-Security
 
-Shared-Files-Security is an offline desktop app for sharing an encrypted file among three designated key holders. In the demo, Actor 1 creates a package for Actors 2, 3, and 4. Any two holders can work together to open it. One share alone is insufficient to recover the encryption key.
+Shared-Files-Security is an offline desktop app for **two-of-three encrypted file sharing**. The sender creates one package for three designated key holders. Any two holders can cooperate to open it. One share alone is insufficient to reconstruct the file key.
+
+The desktop app runs with Python's standard library. The project implements AES-256-GCM, RSA-3072 OAEP and PSS, SHA-256, MGF1, Shamir sharing and password protection for private keys in Python. The OS supplies randomness. The test suite uses `cryptography` as an independent reference.
 
 [Overview](#overview) · [Architecture](#architecture) · [Cryptography](#cryptography-and-file-formats) · [Setup](#setup) · [Demo](#demo) · [Testing](#testing) · [Tools and benchmarks](#tools-and-benchmarks) · [Limitations](#limitations)
 
@@ -15,7 +17,7 @@ Shared-Files-Security is an offline desktop app for sharing an encrypted file am
 | `.sfile2` | Actor 1 sends a copy of the same package to Actors 2, 3, and 4. It contains the encrypted file and three individually wrapped key shares. |
 | `.sapproval` | Actor 2 exports a share encrypted for Actor 3. Actor 3 uses it with the exact package Actor 2 selected. |
 | Public-key JSON | Users exchange these files to import contacts and verify both key fingerprints. |
-| `.sbackup` | An encrypted backup of a profile's private keys. The profile owner keeps it for recovery. |
+| `.sbackup` | A profile backup containing password-encrypted private keys and public keys. |
 
 Source files may be up to **10 MiB**, including empty files, binary files, and files with Unicode names. The package limit is **15 MiB**, and the contribution limit is **2 KiB**. Users transfer the files through an existing channel such as email, chat, or USB.
 
@@ -35,7 +37,7 @@ flowchart TD
 | [Interface](secure_share/ui/app.py) and [startup](secure_share/application.py) | Build the profile, contact, and threshold-sharing tabs. Long-running tasks run in the background. |
 | [Workflow service](secure_share/service.py) | Runs one operation at a time and holds decrypted content in memory until the user saves or cancels. |
 | [Shamir](secure_share/threshold.py) and [threshold workflow](secure_share/threshold_workflow.py) | Split and reconstruct keys, parse packages, verify senders, and bind contributions to the package and recipient. |
-| [Cryptography](secure_share/crypto_ops.py) | Implements AES-256-GCM, SHA-256, MGF1, RSA-OAEP and RSA-PSS in Python. |
+| [Cryptography](secure_share/crypto_ops.py) | Implements AES-256-GCM, SHA-256, MGF1, RSA key generation, OAEP and PSS in Python. RSA private operations use blinding and the Chinese remainder theorem. |
 | [Profiles](secure_share/keys.py), [key encoding](secure_share/key_codec.py), and [contacts](secure_share/trust_store.py) | Manage separate encryption and signing key pairs, SPKI public keys, password-protected PKCS#8 private keys, contact verification, key rotation, and backups. |
 | [Storage](secure_share/storage.py) and [history](secure_share/history.py) | Enforce input limits, save through temporary files, recover from interrupted writes, and warn when a package has already been saved. |
 
@@ -49,9 +51,28 @@ On Windows, the app stores profiles, contacts, history, and temporary-file recov
 | **Shamir 2-of-3** | The AES key is the value at zero of a line over the finite field modulo `2^521 - 1`. Each share is a distinct point on that line. Any two points can reconstruct the key by interpolation. |
 | **RSA-3072 OAEP with SHA-256** | Wraps each share for its holder. A contributor uses it again to wrap their share for the holder who will open the package. |
 | **RSA-3072 PSS with SHA-256** | Signs the header, wrapped shares, nonce, and ciphertext. Each holder verifies the sender's signature before unlocking a share. |
-| **SHA-256 fingerprints** | Identify public keys during verification. Each fingerprint is a 64-character hexadecimal SHA-256 digest of the key's DER-encoded SubjectPublicKeyInfo. |
+| **SHA-256** | Computes fingerprints of DER-encoded public keys, share commitments and package IDs. MGF1 uses SHA-256 for OAEP and PSS. |
+| **PBES2** | Protects private keys in PKCS#8 PEM using PBKDF2-HMAC-SHA-256 and AES-256-CBC. The app implements these operations in Python. |
 
-The `.sfile2` header lists the holders' keys in order and contains a commitment to each share. The signature covers the header and all encrypted fields. When a recipient loads an `.sapproval` file, the app checks the package and recipient bindings and verifies the shares against the signed commitments. It then reconstructs the AES key and verifies the GCM tag before releasing the file contents. [Shamir's original paper](https://publications.csail.mit.edu/lcs/pubs/pdf/MIT-LCS-TM-134.pdf)
+### How the shares reconstruct the AES key
+
+Let $s$ be the AES key as an integer and $p=2^{521}-1$. The sender samples $a$ uniformly modulo $p$ and computes the three shares. For two distinct share indices $i,j$, interpolation recovers $s$.
+
+$$
+y_i \equiv s+ai \pmod p,\qquad i\in\{1,2,3\}
+$$
+
+$$
+s \equiv (j y_i-i y_j)(j-i)^{-1}\pmod p
+$$
+
+For the test vector $s=5$ and $a=3$, the shares are $(1,8)$, $(2,11)$ and $(3,14)$. The first and third shares give $(3\cdot8-14)\cdot 2^{-1}\equiv5\pmod p$. The tests compare the serialized bytes with the hand calculation and recover the key with every pair in both orders. [Threshold implementation](secure_share/threshold.py) · [Test vectors](tests/unit/test_threshold.py) · [Shamir's paper](https://doi.org/10.1145/359168.359176)
+
+### How a contribution is checked
+
+The `.sfile2` header lists the holders in order and contains a SHA-256 commitment to each share. AES-GCM authenticates the header and the wrapped shares as AAD. RSA-PSS signs the framed header, wrapped shares, nonce and ciphertext with its GCM tag. The package ID is the SHA-256 digest of the signature.
+
+Actor 2 verifies the signature, unlocks their share and encrypts the package ID and share together for Actor 3 using RSA-OAEP. Actor 3 checks the package ID, target fingerprint, distinct holder indices and signed commitments before reconstructing the AES key. The app verifies the GCM tag before releasing the file contents. [Threshold workflow](secure_share/threshold_workflow.py)
 
 ```mermaid
 sequenceDiagram
@@ -77,7 +98,7 @@ The Windows demo requires **Python 3.12 with Tkinter**. Run the launcher from th
 .\start.cmd
 ```
 
-The launcher creates `.venv` if needed and starts the app. The app runs with Python's standard library, including Tkinter and the operating system's randomness source. You can also run setup manually.
+The launcher creates `.venv` if needed and starts the app. To check the environment or start the app manually, run:
 
 ```powershell
 py -3.12 -m venv .venv
@@ -101,12 +122,12 @@ The automated demo creates temporary profiles and sample files. It checks that o
 
 ```powershell
 $py = (Resolve-Path .\.venv\Scripts\python.exe).Path
-& $py -m tools.demo
+& $py -S -m tools.demo
 ```
 
 ## Testing
 
-Install the test dependencies to run the suite. The tests use `cryptography` as an independent reference for interoperability checks.
+Install `requirements-dev.txt` to run the suite. The tests use `cryptography` for interoperability checks. In the demo command, `-S` runs Python without loading site packages.
 
 ```powershell
 & $py -m pip install -r requirements-dev.txt
@@ -117,17 +138,19 @@ Install the test dependencies to run the suite. The tests use `cryptography` as 
 & $py -m tools.case_report --run --json .test-results/cases.json
 ```
 
-The Shamir suite covers all three pairs in both contribution directions, missing shares, duplicate holders, mismatched packages or recipients, invalid signatures, retained keys after rotation, the 10 MiB boundary, and saving or cancelling. The full suite also runs 60 regression cases for the earlier protocol to check shared components such as keys, contacts, cryptography, and storage.
+The threshold tests cover all six contribution directions, missing shares, duplicate holders, mismatched packages or recipients, invalid signatures, retained keys after rotation, the 10 MiB boundary, and saving or cancelling.
+
+The local regression run for the Python backend recorded **443 passed tests and 190 passed subtests**. One Tkinter test was skipped in the headless run and passed when rerun separately on Windows. The threshold unit and workflow suites passed **85 tests**. The earlier evidence in `evidence/` covers an older revision. [Python backend revision](https://github.com/lebatiep/Shared-Files-Security/commit/e55bdc0169202646b6e3a3f9f4a9601cfc612b6b) · [Historical verification evidence](evidence/verification-summary.txt)
 
 ## Tools and benchmarks
 
 ```powershell
 & $py -m tools.make_test_data --out .test-results/demo-inputs
 & $py -m tools.compare_files .test-results/demo-inputs/binary.bin .test-results/restored.bin
-& $py -m tools.benchmark --repeats 3
+& $py -m tools.benchmark --repeats 3 --output .test-results/benchmark.json
 ```
 
-Run `compare_files` after saving the recovered file to the corresponding path. The benchmark runs the actual 2-of-3 workflow on synthetic data. It measures package creation, share contribution, and opening plus saving separately, then compares the SHA-256 of the recovered file with the original.
+Run `compare_files` after saving the recovered file to the corresponding path. The benchmark measures package creation, contribution, and opening plus saving on synthetic data. It compares the recovered bytes and SHA-256 with the original. Run the command above to measure the current Python backend. [Historical benchmark data](evidence/benchmark-results.json)
 
 ## Limitations
 
