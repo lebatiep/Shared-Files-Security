@@ -1,4 +1,4 @@
-# Shamir 2-of-3 Secure File Sharing
+# Shared-Files-Security
 
 Shared-Files-Security is an offline desktop app for sharing an encrypted file among three designated key holders. In the demo, Tiêp creates a package for Nhật Minh, Hoàng, and Việt. Any two holders can work together to open it. One share alone is insufficient to recover the encryption key.
 
