@@ -17,6 +17,7 @@ htmlcov/
 .env.*
 !.env.example
 runtime/
+/run.local.json
 *.pem
 *.key
 *.p12
