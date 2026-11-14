@@ -74,8 +74,8 @@ def _message(message: str, stream: TextIO | None = None) -> None:
 def _run_ui() -> int:
     if not _module_file("ui.app").is_file():
         _message(
-            "Giao diện chưa được triển khai. Việt cần cung cấp secure_share/ui/app.py "
-            "với hàm main(). Dùng --check để xem các phần còn thiếu."
+            "The interface is missing. Provide secure_share/ui/app.py "
+            "with a main() function. Use --check to inspect missing components."
         )
         return 2
 
@@ -84,23 +84,23 @@ def _run_ui() -> int:
     except Exception as exc:
         # Do not mislabel a missing dependency inside an existing UI as a missing UI.
         # Exception arguments may contain private information, so show only its type.
-        _message(f"Khởi tạo giao diện thất bại ({type(exc).__name__}). Kiểm tra phần tích hợp.")
+        _message(f"Interface initialization failed ({type(exc).__name__}). Check the application components.")
         return 2
 
     ui_main = getattr(ui_module, "main", None)
     if not callable(ui_main):
-        _message("Giao diện chưa cung cấp hàm main() có thể gọi được.")
+        _message("The interface does not provide a callable main() function.")
         return 2
     try:
         result = ui_main()
     except Exception as exc:
-        _message(f"Giao diện dừng vì lỗi ({type(exc).__name__}). Kiểm tra phần tích hợp.")
+        _message(f"The interface stopped with an error ({type(exc).__name__}). Check the application components.")
         return 2
     if result is None:
         return 0
     if type(result) is int:
         return result
-    _message("Hàm main() của giao diện phải trả về None hoặc mã thoát kiểu int.")
+    _message("The interface main() function must return None or an integer exit code.")
     return 2
 
 

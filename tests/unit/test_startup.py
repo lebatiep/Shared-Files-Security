@@ -79,7 +79,7 @@ class StartupTests(unittest.TestCase):
                     self.assertEqual(cli.main([]), 2)
         self.assertIn("ModuleNotFoundError", output.getvalue())
         self.assertNotIn("private-module", output.getvalue())
-        self.assertNotIn("chưa được triển khai", output.getvalue())
+        self.assertNotIn("The interface is missing", output.getvalue())
 
     def test_ready_ui_main_is_called(self):
         calls = []

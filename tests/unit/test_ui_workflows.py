@@ -46,7 +46,7 @@ def test_cancel_receive_confirmation_or_save_dialog_discards_handle(window, monk
     window.app.service.discard_prepared.assert_called_once_with(prepared.handle)
     assert save_dialog.call_count == accept
     window.run.assert_not_called()
-    window.status.set.assert_called_once_with('Đã hủy thao tác.')
+    window.status.set.assert_called_once_with('Operation cancelled.')
 
 
 @pytest.mark.case('R06')

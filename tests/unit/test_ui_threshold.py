@@ -179,7 +179,7 @@ def test_cancelling_a_threshold_dialog_never_starts_work(window, tmp_path, monke
     getattr(window, operation)()
 
     window.run.assert_not_called()
-    window.status.set.assert_called_once_with('Đã hủy thao tác.')
+    window.status.set.assert_called_once_with('Operation cancelled.')
     assert not window.app.service.mock_calls
     assert not output.exists()
     assert window.password.call_count == (cancel_at == 'password')

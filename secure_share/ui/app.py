@@ -29,46 +29,46 @@ class App:
         self.buttons = []
         self.contacts_profile = None
         self.profile = tk.StringVar()
-        self.status = tk.StringVar(value='Tạo hồ sơ và xác minh người liên hệ để chia sẻ tệp 2-trên-3.')
+        self.status = tk.StringVar(value='Create a profile and verify contacts to share files with two of three holders.')
         root.title('Shared-Files-Security')
         root.geometry('900x670')
         root.minsize(780, 570)
         root.protocol('WM_DELETE_WINDOW', self.close)
         outer = ttk.Frame(root, padding=20)
         outer.pack(fill='both', expand=True)
-        ttk.Label(outer, text='Chia sẻ tệp 2-trên-3', font=('Segoe UI', 21, 'bold')).pack(anchor='w')
-        ttk.Label(outer, text='Tệp tối đa 10 MiB • Khóa riêng được bảo vệ bằng mật khẩu trên máy của bạn').pack(anchor='w', pady=(4, 18))
+        ttk.Label(outer, text='Two-of-Three File Sharing', font=('Segoe UI', 21, 'bold')).pack(anchor='w')
+        ttk.Label(outer, text='Files up to 10 MiB | Private keys are password-protected on your device').pack(anchor='w', pady=(4, 18))
         line = ttk.Frame(outer)
         line.pack(fill='x')
-        ttk.Label(line, text='Hồ sơ đang dùng').pack(side='left', padx=(0, 12))
+        ttk.Label(line, text='Active profile').pack(side='left', padx=(0, 12))
         self.profiles = ttk.Combobox(line, textvariable=self.profile, state='readonly', width=30)
         self.profiles.pack(side='left')
         self.profiles.bind('<<ComboboxSelected>>', lambda event: self.perform(self.refresh_contacts))
-        self.button(line, 'Tạo hồ sơ', self.create_profile).pack(side='left', padx=8)
+        self.button(line, 'Create profile', self.create_profile).pack(side='left', padx=8)
         tabs = ttk.Notebook(outer)
         tabs.pack(fill='both', expand=True, pady=18)
         threshold_tab = ttk.Frame(tabs, padding=16)
         profile_tab = ttk.Frame(tabs, padding=16)
         contacts_tab = ttk.Frame(tabs, padding=16)
-        tabs.add(profile_tab, text='Khóa của tôi')
-        tabs.add(contacts_tab, text='Người liên hệ')
-        tabs.add(threshold_tab, text='Chia sẻ 2-trên-3')
+        tabs.add(profile_tab, text='My keys')
+        tabs.add(contacts_tab, text='Contacts')
+        tabs.add(threshold_tab, text='Two-of-three sharing')
         tabs.select(threshold_tab)
         self.build_threshold_tab(threshold_tab)
         self.identity = tk.Text(profile_tab, height=10, wrap='word', font=('Consolas', 11), state='disabled')
         self.identity.pack(fill='both', expand=True)
-        self.button(profile_tab, 'Xuất khóa công khai', self.export_keys).pack(side='left', pady=12)
-        self.button(profile_tab, 'Tạo cặp khóa mới', self.rotate_keys).pack(side='left', padx=8)
-        self.button(profile_tab, 'Sao lưu hồ sơ', self.backup_profile).pack(side='left', padx=8)
-        self.button(profile_tab, 'Khôi phục hồ sơ', self.restore_profile).pack(side='left', padx=8)
-        ttk.Label(contacts_tab, text='Đối chiếu hai dấu vân tay qua gặp mặt hoặc cuộc gọi đã xác thực.', wraplength=740).pack(anchor='w')
+        self.button(profile_tab, 'Export public keys', self.export_keys).pack(side='left', pady=12)
+        self.button(profile_tab, 'Rotate keys', self.rotate_keys).pack(side='left', padx=8)
+        self.button(profile_tab, 'Back up profile', self.backup_profile).pack(side='left', padx=8)
+        self.button(profile_tab, 'Restore profile', self.restore_profile).pack(side='left', padx=8)
+        ttk.Label(contacts_tab, text='Compare both fingerprints in person or over an authenticated call.', wraplength=740).pack(anchor='w')
         self.contacts = ttk.Treeview(contacts_tab, columns=('name', 'status'), show='headings', height=8)
-        self.contacts.heading('name', text='Người liên hệ')
-        self.contacts.heading('status', text='Trạng thái xác minh')
+        self.contacts.heading('name', text='Contacts')
+        self.contacts.heading('status', text='Verification status')
         self.contacts.pack(fill='both', expand=True, pady=12)
         contact_actions = ttk.Frame(contacts_tab)
         contact_actions.pack(fill='x')
-        for label, action in [('Nhập khóa', self.import_contact), ('Xem dấu vân tay', self.show_contact), ('Xác minh', self.verify_contact), ('Vô hiệu hóa', self.disable_contact)]:
+        for label, action in [('Import keys', self.import_contact), ('View fingerprints', self.show_contact), ('Verify', self.verify_contact), ('Disable', self.disable_contact)]:
             self.button(contact_actions, label, action).pack(side='left', padx=(0, 8))
         self.progress = ttk.Progressbar(outer, mode='indeterminate')
         self.progress.pack(fill='x')
@@ -79,35 +79,35 @@ class App:
     def build_threshold_tab(self, tab):
         ttk.Label(
             tab,
-            text='Gửi cùng gói .sfile2 cho cả ba người giữ. Một người giữ mở tệp bằng khóa riêng '
-                 'của mình và tệp .sapproval do một người giữ khác gửi cho họ.\n'
-                 'Người giữ cần xác minh người gửi gói. Người góp cần xác minh thêm người sẽ mở.',
+            text='Send the same .sfile2 package to all three holders. A holder opens it using their private key '
+                 'and an .sapproval contribution sent to them by another holder.\n'
+                 'Holders must verify the sender. Contributors must also verify the holder who will open the file.',
             wraplength=680,
         ).pack(anchor='w', pady=(0, 8))
-        send = ttk.LabelFrame(tab, text='1. Tạo gói .sfile2', padding=8)
+        send = ttk.LabelFrame(tab, text='1. Create a .sfile2 package', padding=8)
         send.pack(fill='x', pady=(0, 6))
         holders = ttk.Frame(send)
         holders.pack(anchor='w')
         selectors = []
         for column in range(3):
-            ttk.Label(holders, text=f'Người giữ {column + 1}').grid(row=0, column=column, sticky='w')
+            ttk.Label(holders, text=f'Holder {column + 1}').grid(row=0, column=column, sticky='w')
             selector = ttk.Combobox(holders, state='readonly', width=20)
             selector.grid(row=1, column=column, padx=(0, 10), pady=(2, 0), sticky='w')
             selectors.append(selector)
         self.threshold_holders = tuple(selectors)
-        self.button(send, 'Chọn tệp và tạo gói', self.send_threshold).pack(anchor='w', pady=(6, 0))
+        self.button(send, 'Choose file and create package', self.send_threshold).pack(anchor='w', pady=(6, 0))
 
-        contribute = ttk.LabelFrame(tab, text='2. Góp một phần khóa', padding=8)
+        contribute = ttk.LabelFrame(tab, text='2. Contribute a key share', padding=8)
         contribute.pack(fill='x', pady=(0, 6))
-        ttk.Label(contribute, text='Người giữ sẽ mở gói').pack(side='left', padx=(0, 8))
+        ttk.Label(contribute, text='Holder who will open the file').pack(side='left', padx=(0, 8))
         self.contribution_recipient = ttk.Combobox(contribute, state='readonly', width=20)
         self.contribution_recipient.pack(side='left', padx=(0, 8))
-        self.button(contribute, 'Chọn gói và xuất .sapproval', self.export_contribution).pack(side='left')
+        self.button(contribute, 'Choose package and export .sapproval', self.export_contribution).pack(side='left')
         self.threshold_selectors = (*self.threshold_holders, self.contribution_recipient)
 
-        receive = ttk.LabelFrame(tab, text='3. Mở tệp', padding=8)
+        receive = ttk.LabelFrame(tab, text='3. Open a file', padding=8)
         receive.pack(fill='x')
-        self.button(receive, 'Chọn .sfile2 và .sapproval', self.receive_threshold).pack(anchor='w')
+        self.button(receive, 'Choose .sfile2 and .sapproval', self.receive_threshold).pack(anchor='w')
 
     def button(self, parent, text, command):
         button = ttk.Button(parent, text=text, command=lambda: self.perform(command))
@@ -125,12 +125,12 @@ class App:
             self.show_error(ErrorCode.INTERNAL_ERROR)
 
     def show_error(self, code):
-        self.status.set('Không hoàn tất thao tác.')
+        self.status.set('Operation could not be completed.')
         messagebox.showerror(
-            'Không hoàn tất', f'{safe_message(code)}\nMã lỗi: {code.value}', parent=self.root)
+            'Operation failed', f'{safe_message(code)}\nError code: {code.value}', parent=self.root)
 
     def cancel(self):
-        self.status.set('Đã hủy thao tác.')
+        self.status.set('Operation cancelled.')
 
     def selected_profile(self):
         value = self.profile.get()
@@ -145,11 +145,11 @@ class App:
         return selection[0]
 
     def password(self, confirm=False):
-        value = simpledialog.askstring('Mật khẩu khóa riêng', 'Nhập mật khẩu hồ sơ' + (' (ít nhất 12 ký tự)' if confirm else ''), show='*', parent=self.root)
+        value = simpledialog.askstring('Private key passphrase', 'Enter the profile passphrase' + (' (at least 12 characters)' if confirm else ''), show='*', parent=self.root)
         if value is None:
             return None
         if confirm:
-            again = simpledialog.askstring('Xác nhận mật khẩu', 'Nhập lại mật khẩu', show='*', parent=self.root)
+            again = simpledialog.askstring('Confirm passphrase', 'Enter the passphrase again', show='*', parent=self.root)
             if again is None:
                 return None
             if value != again or len(value) < 12:
@@ -166,10 +166,10 @@ class App:
             selector.configure(state=state)
         if busy:
             self.progress.start(12)
-            self.status.set('Đang xử lý…')
+            self.status.set('Processing...')
         else:
             self.progress.stop()
-            self.status.set('Sẵn sàng.')
+            self.status.set('Ready.')
 
     def run(self, work, callback):
         if self.busy or self.closed:
@@ -220,16 +220,16 @@ class App:
         self.contacts.delete(*self.contacts.get_children())
         entries = []
         profile_id = self.profile.get()
-        text = 'Chưa có hồ sơ. Chọn “Tạo hồ sơ” để bắt đầu.'
+        text = 'No profiles yet. Select Create profile to get started.'
         if profile_id:
             profile = self.app.keys.get_profile(profile_id)
-            text = f'{profile.display_name} ({profile.profile_id})\n\nKhóa mã hóa:\n{profile.encryption_fingerprint}\n\nKhóa chữ ký:\n{profile.signing_fingerprint}\n\nChỉ chia sẻ khóa công khai. Giữ riêng mật khẩu và hồ sơ khóa.'
+            text = f'{profile.display_name} ({profile.profile_id})\n\nEncryption key fingerprint:\n{profile.encryption_fingerprint}\n\nSigning key fingerprint:\n{profile.signing_fingerprint}\n\nShare only public keys. Keep your passphrase and private key profile secret.'
             entries = self.app.trust.list_contacts(profile.profile_id)
         self.identity.configure(state='normal')
         self.identity.delete('1.0', 'end')
         self.identity.insert('1.0', text)
         self.identity.configure(state='disabled')
-        labels = {TrustStatus.VERIFIED: 'Đã xác minh', TrustStatus.UNVERIFIED: 'Chưa xác minh', TrustStatus.DISABLED: 'Đã vô hiệu hóa'}
+        labels = {TrustStatus.VERIFIED: 'Verified', TrustStatus.UNVERIFIED: 'Unverified', TrustStatus.DISABLED: 'Disabled'}
         for entry in entries:
             self.contacts.insert('', 'end', iid=entry.contact_id, values=(f'{entry.display_name} ({entry.contact_id})', labels[entry.status]))
         verified_ids = [entry.contact_id for entry in entries if entry.status is TrustStatus.VERIFIED]
@@ -240,10 +240,10 @@ class App:
         self.contacts_profile = profile_id
 
     def create_profile(self):
-        profile_id = simpledialog.askstring('Tạo hồ sơ', 'Mã hồ sơ: chữ thường không dấu, số, _ hoặc -', parent=self.root)
+        profile_id = simpledialog.askstring('Create profile', 'Profile ID: lowercase ASCII letters, digits, _ or -', parent=self.root)
         if not profile_id:
             return
-        name = simpledialog.askstring('Tạo hồ sơ', 'Tên hiển thị', parent=self.root)
+        name = simpledialog.askstring('Create profile', 'Display name', parent=self.root)
         if not name:
             return
         password = self.password(confirm=True)
@@ -260,11 +260,11 @@ class App:
         if path:
             self.app.storage.save_atomic(self.app.keys.public_bundle(profile), Path(path), overwrite_confirmed=False,
                                          protected_paths=self.app.keys.protected_paths(profile))
-            self.status.set('Đã xuất khóa công khai. Gửi tệp này cho người liên hệ.')
+            self.status.set('Public keys exported. Send this file to your contact.')
 
     def rotate_keys(self):
         profile = self.selected_profile()
-        if not messagebox.askyesno('Đổi khóa', 'Tạo khóa mới? Sau đó cần xuất và xác minh lại với người liên hệ. Khóa cũ vẫn được giữ để mở tệp cũ.', parent=self.root):
+        if not messagebox.askyesno('Rotate keys', 'Generate new keys? Export and verify them with your contacts afterwards. Old keys are retained to open existing files.', parent=self.root):
             return
         password = self.password()
         if password is not None:
@@ -282,11 +282,11 @@ class App:
             data = self.app.keys.backup_profile(profile, password)
             self.app.storage.save_atomic(data, Path(path), protected_paths=self.app.keys.protected_paths(profile))
         def done(result):
-            self.status.set('Đã sao lưu khóa riêng có mã hóa. Cất bản sao ở nơi riêng; không gửi cho người liên hệ.')
+            self.status.set('Encrypted private keys backed up. Store the backup privately; do not send it to contacts.')
         self.run(work, done)
 
     def restore_profile(self):
-        path = filedialog.askopenfilename(parent=self.root, filetypes=[('Hồ sơ sao lưu', '*.sbackup')])
+        path = filedialog.askopenfilename(parent=self.root, filetypes=[('Profile backup', '*.sbackup')])
         if not path:
             return
         password = self.password()
@@ -298,15 +298,15 @@ class App:
         def done(profile):
             self.profile.set(profile.profile_id)
             self.refresh()
-            self.status.set('Đã khôi phục hồ sơ. Nhập và xác minh lại người liên hệ trên máy này.')
+            self.status.set('Profile restored. Import and verify contacts again on this device.')
         self.run(work, done)
 
     def import_contact(self):
         profile = self.selected_profile()
-        path = filedialog.askopenfilename(parent=self.root, filetypes=[('Khóa công khai', '*.json'), ('Tất cả', '*.*')])
+        path = filedialog.askopenfilename(parent=self.root, filetypes=[('Public keys', '*.json'), ('All files', '*.*')])
         if not path:
             return
-        contact = simpledialog.askstring('Người liên hệ', 'Mã người liên hệ (không dấu)', parent=self.root)
+        contact = simpledialog.askstring('Contacts', 'Contact ID (ASCII letters, digits, _ or -)', parent=self.root)
         if not contact:
             return
         data = self.app.storage.read_limited(Path(path), 8192)
@@ -325,14 +325,14 @@ class App:
     def show_contact(self):
         profile, contact_id = self.selected_profile(), self.selected_contact()
         contact = next(c for c in self.app.trust.list_contacts(profile) if c.contact_id == contact_id)
-        messagebox.showinfo('Dấu vân tay', f'{contact.display_name}\n\nMã hóa:\n{contact.encryption_fingerprint}\n\nChữ ký:\n{contact.signing_fingerprint}', parent=self.root)
+        messagebox.showinfo('Fingerprints', f'{contact.display_name}\n\nEncryption key fingerprint:\n{contact.encryption_fingerprint}\n\nSigning key fingerprint:\n{contact.signing_fingerprint}', parent=self.root)
 
     def verify_contact(self):
         profile, contact = self.selected_profile(), self.selected_contact()
-        encryption = simpledialog.askstring('Xác minh độc lập', 'Nhập đủ 64 ký tự dấu vân tay KHÓA MÃ HÓA do người liên hệ xác nhận trực tiếp hoặc qua cuộc gọi:', parent=self.root)
+        encryption = simpledialog.askstring('Independent verification', 'Enter all 64 characters of the ENCRYPTION KEY fingerprint confirmed by the contact in person or over an authenticated call:', parent=self.root)
         if encryption is None:
             return
-        signing = simpledialog.askstring('Xác minh độc lập', 'Nhập đủ 64 ký tự dấu vân tay KHÓA CHỮ KÝ từ cùng kênh đã xác thực:', parent=self.root)
+        signing = simpledialog.askstring('Independent verification', 'Enter all 64 characters of the SIGNING KEY fingerprint from the same authenticated channel:', parent=self.root)
         if signing is None:
             return
         self.app.trust.verify_contact(profile, contact, encryption.strip().lower(), signing.strip().lower())
@@ -340,7 +340,7 @@ class App:
 
     def disable_contact(self):
         profile, contact = self.selected_profile(), self.selected_contact()
-        if messagebox.askyesno('Vô hiệu hóa', 'Ngừng gửi và nhận bằng khóa của liên hệ này?', parent=self.root):
+        if messagebox.askyesno('Disable', 'Stop sending and receiving with this contact and their keys?', parent=self.root):
             self.app.trust.disable_contact(profile, contact)
             self.refresh_contacts()
 
@@ -350,19 +350,19 @@ class App:
         elif result.status is OperationStatus.CANCELLED:
             self.cancel()
         elif result.status is OperationStatus.SUCCESS and result.receipt is not None:
-            self.status.set(f'Đã lưu tệp tại {result.receipt.destination}')
+            self.status.set(f'File saved to {result.receipt.destination}')
         else:
             self.show_error(ErrorCode.INTERNAL_ERROR)
         warnings = {
-            WarningCode.DUPLICATE_TRANSFER: 'Gói này đã được mở trước đó.',
-            WarningCode.HISTORY_UNAVAILABLE: 'Không đọc được lịch sử.',
-            WarningCode.HISTORY_NOT_SAVED: 'Tệp đã lưu, nhưng chưa ghi được lịch sử.',
+            WarningCode.DUPLICATE_TRANSFER: 'This package has been opened before.',
+            WarningCode.HISTORY_UNAVAILABLE: 'Could not read the history.',
+            WarningCode.HISTORY_NOT_SAVED: 'The file was saved, but its history could not be recorded.',
         }
         if result.warnings:
             notices = [warnings[warning] for warning in result.warnings]
             if WarningCode.HISTORY_NOT_SAVED in result.warnings and result.receipt is not None:
-                notices.append(f'Vị trí tệp đã lưu: {result.receipt.destination}')
-            messagebox.showwarning('Thông báo', '\n'.join(notices), parent=self.root)
+                notices.append(f'Saved file location: {result.receipt.destination}')
+            messagebox.showwarning('Notice', '\n'.join(notices), parent=self.root)
 
     def choose_destination(self, filename, *, extension=''):
         while True:
@@ -373,7 +373,7 @@ class App:
             destination = Path(selected)
             overwrite = destination.exists()
             if not overwrite or messagebox.askyesno(
-                'Ghi đè', f'Thay thế tệp đang tồn tại?\n{destination}',
+                'Overwrite', f'Replace the existing file?\n{destination}',
                 default=messagebox.NO, parent=self.root,
             ):
                 return destination, overwrite
@@ -387,7 +387,7 @@ class App:
         fingerprints = tuple((holder.encryption_fingerprint, holder.signing_fingerprint) for holder in holders)
         if len({fingerprint for pair in fingerprints for fingerprint in pair}) != 6:
             raise ShareError(ErrorCode.INVALID_THRESHOLD_RECIPIENTS)
-        source = filedialog.askopenfilename(title='Chọn tệp nguồn', parent=self.root)
+        source = filedialog.askopenfilename(title='Choose source file', parent=self.root)
         if not source:
             self.cancel()
             return
@@ -398,12 +398,12 @@ class App:
         destination, overwrite = selected
         identities = '\n\n'.join(
             f'{holder.display_name} ({holder.contact_id})\n'
-            f'Mã hóa: {holder.encryption_fingerprint}\nChữ ký: {holder.signing_fingerprint}'
+            f'Encryption key fingerprint: {holder.encryption_fingerprint}\nSigning key fingerprint: {holder.signing_fingerprint}'
             for holder in holders
         )
         if not messagebox.askyesno(
-            'Xác nhận ba người giữ',
-            f'{identities}\n\nTệp nguồn: {source}\nGói sẽ lưu tại: {destination}\n\nTạo gói cho ba người này?',
+            'Confirm three holders',
+            f'{identities}\n\nSource file: {source}\nSave package to: {destination}\n\nCreate a package for these three holders?',
             default=messagebox.NO, parent=self.root,
         ):
             self.cancel()
@@ -420,14 +420,14 @@ class App:
 
     def select_threshold_package(self):
         return filedialog.askopenfilename(
-            title='Chọn gói .sfile2', parent=self.root,
-            filetypes=[('Gói 2-trên-3', '*.sfile2'), ('Tất cả', '*.*')],
+            title='Choose a .sfile2 package', parent=self.root,
+            filetypes=[('Two-of-three package', '*.sfile2'), ('All files', '*.*')],
         )
 
     def export_contribution(self):
         profile, contact_id = self.selected_profile(), self.contribution_recipient.get()
         if not contact_id:
-            self.status.set('Chọn người giữ sẽ mở gói trong danh sách liên hệ đã xác minh.')
+            self.status.set('Select the holder who will open the file from your verified contacts.')
             return
         recipient = self.app.trust.resolve_recipient(profile, contact_id)
         package = self.select_threshold_package()
@@ -440,10 +440,10 @@ class App:
             return
         destination, overwrite = selected
         if not messagebox.askyesno(
-            'Xác nhận người nhận phần đóng góp',
+            'Confirm contribution recipient',
             f'{recipient.display_name} ({recipient.contact_id})\n'
-            f'Dấu vân tay khóa mã hóa:\n{recipient.encryption_fingerprint}\n\n'
-            f'Gói: {package}\nPhần đóng góp sẽ lưu tại: {destination}\n\nXuất phần đóng góp cho người này?',
+            f'Encryption key fingerprint:\n{recipient.encryption_fingerprint}\n\n'
+            f'Package: {package}\nSave contribution to: {destination}\n\nExport a contribution for this holder?',
             default=messagebox.NO, parent=self.root,
         ):
             self.cancel()
@@ -465,8 +465,8 @@ class App:
             self.cancel()
             return
         contribution = filedialog.askopenfilename(
-            title='Chọn phần đóng góp gửi cho bạn', parent=self.root,
-            filetypes=[('Phần đóng góp', '*.sapproval'), ('Tất cả', '*.*')],
+            title='Choose the contribution sent to you', parent=self.root,
+            filetypes=[('Contribution', '*.sapproval'), ('All files', '*.*')],
         )
         if not contribution:
             self.cancel()
@@ -483,13 +483,13 @@ class App:
             self.result(result)
             return
         prepared = result.prepared
-        notice = f'Người gửi: {prepared.sender_name}\nTên tệp: {prepared.filename}\nDung lượng: {prepared.byte_count:,} bytes'
+        notice = f'Sender: {prepared.sender_name}\nFilename: {prepared.filename}\nSize: {prepared.byte_count:,} bytes'
         if prepared.duplicate:
-            notice += '\nGói này đã được mở trước đó.'
+            notice += '\nThis package has been opened before.'
         if WarningCode.HISTORY_UNAVAILABLE in result.warnings:
-            notice += '\nKhông đọc được lịch sử mở tệp.'
+            notice += '\nCould not read the file opening history.'
         if not messagebox.askyesno(
-            'Đã xác thực nội dung', notice + '\n\nLưu tệp đã giải mã?',
+            'Content verified', notice + '\n\nSave the decrypted file?',
             default=messagebox.NO, parent=self.root,
         ):
             self.result(self.app.service.discard_prepared(prepared.handle))
@@ -506,7 +506,7 @@ class App:
         def done(result):
             self.result(result)
             if self.app.service.has_prepared:
-                if messagebox.askyesno('Chọn lại nơi lưu', 'Tệp chưa được lưu. Chọn nơi lưu khác?', parent=self.root):
+                if messagebox.askyesno('Choose another location', 'The file has not been saved. Choose another location?', parent=self.root):
                     self.save_prepared(prepared)
                 else:
                     self.result(self.app.service.discard_prepared(prepared.handle))
@@ -517,7 +517,7 @@ class App:
 
     def close(self):
         if self.busy:
-            messagebox.showinfo('Đang xử lý', 'Chờ tác vụ hiện tại hoàn tất rồi đóng ứng dụng.', parent=self.root)
+            messagebox.showinfo('Processing', 'Wait for the current operation to finish before closing the app.', parent=self.root)
             return
         self.closed = True
         self.app.service.close()
@@ -529,12 +529,12 @@ def main():
     try:
         root = tk.Tk()
     except tk.TclError:
-        print('Không khởi động được giao diện Tkinter. Hãy kiểm tra cài đặt Python và Tcl/Tk.', file=sys.stderr)
+        print('Could not start Tkinter. Check your Python and Tcl/Tk installation.', file=sys.stderr)
         return 2
     try:
         App(root, create_application())
     except Exception:
-        messagebox.showerror('Không khởi động được', 'Không đọc được dữ liệu ứng dụng. Hãy kiểm tra quyền truy cập và hồ sơ đã lưu.', parent=root)
+        messagebox.showerror('Startup failed', 'Could not read application data. Check access permissions and saved profiles.', parent=root)
         root.destroy()
         return 2
     root.mainloop()

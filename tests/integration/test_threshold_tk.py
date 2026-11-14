@@ -44,9 +44,9 @@ def test_threshold_tab_create_contribute_and_receive(tmp_path, monkeypatch):
             if isinstance(widget, ui.ttk.Notebook)
         )
         assert {notebook.tab(tab, "text") for tab in notebook.tabs()} == {
-            "Khóa của tôi", "Người liên hệ", "Chia sẻ 2-trên-3",
+            "My keys", "Contacts", "Two-of-three sharing",
         }
-        assert notebook.tab(notebook.select(), "text") == "Chia sẻ 2-trên-3"
+        assert notebook.tab(notebook.select(), "text") == "Two-of-three sharing"
         for profile_id, expected_name in zip((SENDER, *HOLDERS), ("Tiêp", "Nhật Minh", "Hoàng", "Việt"), strict=True):
             assert application.keys.get_profile(profile_id).display_name == expected_name
 
